@@ -2,6 +2,7 @@ import { request } from '../../utils/request'
 import { getMe, logout, wxLogin, routeAfterLogin, isManagerRole } from '../../utils/auth'
 import { openPrivacyContract } from '../../utils/privacy'
 import { goRecordTab, goHomeTab } from '../../utils/nav'
+import { cachedFetch, invalidate, readCache, KEY, TTL_DATA } from '../../utils/cache'
 
 // 进度口径与服务端 app/stats.py 一致：完成率 = 已通过 / 总任务数
 interface Progress {
@@ -30,6 +31,8 @@ const SWITCH_ROLES: Array<{ key: 'collector' | 'admin'; label: string }> = [
 Page({
   data: {
     loading: true,
+    // 首次渲染后摘掉入场动画类，避免每次回到本页都重播
+    anim: 'stagger',
     userId: '',
     role: '',
     roleText: '',
@@ -44,11 +47,25 @@ Page({
     version: ''
   },
 
+  rendered: false,
+  animTimer: null as any,
+
   onShow() {
     this.load()
   },
   onPullDownRefresh() {
+    invalidate()
     this.load().finally(() => wx.stopPullDownRefresh())
+  },
+  onUnload() {
+    if (this.animTimer) clearTimeout(this.animTimer)
+  },
+
+  // 首屏就绪：入场动画只播一次
+  markRendered() {
+    if (this.rendered) return
+    this.rendered = true
+    this.animTimer = setTimeout(() => this.setData({ anim: '' }), 1200)
   },
 
   readEnv() {
@@ -71,6 +88,7 @@ Page({
   async load() {
     this.setData({ loading: true })
     this.readEnv()
+    const warm = readCache(KEY.me) !== null
     try {
       const me = await getMe()
       const isManager = isManagerRole(me.role)
@@ -87,17 +105,31 @@ Page({
         return
       }
       try {
-        const p = await request<Progress>({ url: '/progress' })
+        const r = await cachedFetch<Progress>(
+          KEY.progress,
+          TTL_DATA,
+          () => request<Progress>({ url: '/progress' }),
+          (fresh) =>
+            this.setData({
+              progress: fresh,
+              percent: Math.round((fresh.completionRate || 0) * 100)
+            })
+        )
+        const p = r.data
         this.setData({ progress: p, percent: Math.round((p.completionRate || 0) * 100) })
       } catch {
         this.setData({ progress: null, percent: 0 })
       }
     } catch (e: any) {
-      // token 失效：回登录页
-      wx.showToast({ title: e.message || '未登录', icon: 'none' })
-      setTimeout(() => wx.reLaunch({ url: '/pages/login/login' }), 800)
+      const msg: string = (e && e.message) || '未登录'
+      wx.showToast({ title: msg, icon: 'none' })
+      // 仅 token 失效才回登录页；后端未启动等网络问题留在本页
+      if (/401|未登录|登录已过期|token/i.test(msg) && !warm) {
+        setTimeout(() => wx.reLaunch({ url: '/pages/login/login' }), 800)
+      }
     } finally {
       this.setData({ loading: false })
+      this.markRendered()
     }
   },
 

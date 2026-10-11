@@ -94,7 +94,8 @@ E:/asr/
 ├── asr-server/                          # FastAPI 后端（PostgreSQL / 对象存储 / FFmpeg）
 └── tools/
     ├── verify_recording.py              # 真机录音验证脚本
-    ├── check_miniprogram.js             # 小程序静态自检（TS 语法 / JSON / 页面与图标齐备 / 跳转 / WXML class / WXSS 兼容性）
+    ├── check_miniprogram.js             # 小程序静态自检（TS 语法 / JSON / 页面与图标齐备 / 跳转 / WXML class / WXSS 兼容性 / 缓存层接入）
+    ├── test_cache.js                    # 缓存层单测（并发去重 / TTL 命中 / 过期回旧值 + 后台刷新 / 代际失效 / 切 tab 请求数对比）
     ├── gen_tabbar_icons.py              # 生成 tabBar 图标（Pillow）
     ├── gen_style_preview.py             # 用真实 WXSS（rpx→px、view→div）生成可截图的 HTML 预览
     ├── fix_wxss_adaptive.py             # 一次性：批量修掉 calc(%)+rpx / flex gap / padding 简写含 env()
@@ -103,7 +104,8 @@ E:/asr/
     ├── smoke_import.py                  # Excel 导入与统一下发烟测（20 项，含 /tasks 新增字段）
     ├── smoke_reviewer.py                # 审核员权限/版本递增/退回原因烟测（17 项）
     ├── smoke_progress_export.py         # 进度统计/导出完整性/录音中断烟测（33 项）
-    └── smoke_audit_cleanup.py           # 审计日志查询/导出过期清理烟测（49 项）
+    ├── smoke_audit_cleanup.py           # 审计日志查询/导出过期清理烟测（49 项）
+    └── smoke_tasks_batch.py             # 退回原因批量取数 + N+1 回归护栏烟测（19 项）
 ```
 
 ---
@@ -198,10 +200,11 @@ dataset.zip
 - ✅ 角色通路分流：登录后按 `/auth/me` 角色进入同一套 tabBar 的统一首页，内容自适应
 - ✅ **统一导航**：管理员/审核员与采集员共用同一套底部 tabBar（首页 / 学习资源 / 语言采集 / 我的），角色只改变首页内容；`utils/nav.ts` 统一 tab 路径，跨 tab 传待录任务走本地存储（`switchTab` 不支持 query）；切 tab 不再误判录音中断（改用 `wx.onAppHide`）
 - ✅ **统一视觉与动效**：`app.wxss` 设计令牌 + 全局动画库；自定义 tabBar 高亮块横滑 / 图标弹跳（无震动）；页面内容交错上浮入场、进度条生长、按压反馈；录音页呼吸光晕 + 波纹扩散 + 律动波形；切换文本按方向滑入
+- ✅ **性能与缓存架构**：新增 `utils/cache.ts`（内存 TTL + 并发去重 + stale-while-revalidate + 代际失效），四个 tab 页缓存直出、骨架屏只在真·首屏出现；全量列表移出 `data`（首页只 setData 20 条、资源页 30 条、审核台 30 条/页 + 加载更多）；自定义 tabBar 高亮块改 `translateX` 合成层并去掉 `backdrop-filter`；骨架屏改透明度脉冲；后端 `list_tasks` 消除退回原因 N+1（60 条退回任务：3 次 SQL / 约 11ms，修复前 60+ 次）
 - ✅ 统一首页：采集员（同意书提醒 / 我的进度 / 开始采集 / 我的任务 / 公共池）与管理员（全局完成率 / 待审已采总数 / 导入·审核·审计入口 / 采集员排行 / 任务包）自适应；原「我的任务」页与管理台首页合并
 - ✅ 学习资源页：录音规范 6 条 + 采集前自检（同意书 / 隐私 / 审核台）+ 常见退回原因折叠；采集员可检索文本库点按直进采集，管理员可看导入格式两列说明、复制模板示例与上线检查项
 - ✅ 管理台入口：首页 · 待审统计 + 导入任务、录音审核、审计日志入口
-- ✅ 小程序静态自检：`tools/check_miniprogram.js`（TS 语法 / JSON / 页面与 tabBar 图标齐备 / 跳转路径合法 / 自定义 tabBar 组件齐备 / WXML 字面量 class 均有样式 / **WXSS 兼容性**）
+- ✅ 小程序静态自检：`tools/check_miniprogram.js`（TS 语法 / JSON / 页面与 tabBar 图标齐备 / 跳转路径合法 / 自定义 tabBar 组件齐备 / WXML 字面量 class 均有样式 / **WXSS 兼容性** / **缓存层接入与 setData 数据量护栏**）
 - ✅ **自适应布局修复**：学习资源页两列规范卡改为纯百分比 + `space-between`（原来 `calc(50% - 8rpx)` 与 `gap` 叠加，rpx 取整后刚好超过 100%，真机上退化成单列）；全仓移除 flex `gap`（iOS 13- 不支持）与 `padding` 简写里的 `env()`；tab 页底部留白改用 `--tab-pad` 变量 + 兜底声明；新增 `tools/gen_style_preview.py` 用**真实 WXSS** 生成预览，避免手写 CSS 镜像骗人
 - ✅ 导入任务：上传 Excel（`序号`/`汉语文本` 两列表）/ CSV / JSON，或粘贴多行文本（服务端用 openpyxl 解析 xlsx）
 - ✅ 任务统一下发：勾选采集员后按人下发子任务——每人一份（`all`）或轮流分摊（`split`）；不指派则进公共池
@@ -217,8 +220,9 @@ dataset.zip
 - ✅ 审计日志查询：`GET /api/admin/audit-logs`（按操作类型/操作人/对象类型过滤 + 分页），管理台新增「审计日志」页；导入、上传、审核、导出、改角色、同意/撤回等操作全程留痕
 - ✅ 导出文件过期清理：`EXPORT_TTL_DAYS`（默认 7 天）到期自动删除导出包并清理孤儿文件；服务启动 / 异步导出完成后 / 手动 `POST /api/admin/export/cleanup` 三处触发
 - ✅ 录音采集页（队列式版式）：顶部上/下条切换 + `x/总数` 计数、突出汉语文本与编号、发音人/任务包信息条、重录替换警告、圆形录音按钮 + 计时；提交成功自动跳下一条
-- ✅ 烟测脚本：`tools/smoke_roles.py`（15）、`smoke_import.py`（20）、`smoke_reviewer.py`（17）、`smoke_progress_export.py`（33）、`smoke_audit_cleanup.py`（49）
-- ✅ 小程序静态自检：`node tools/check_miniprogram.js`（TS 语法 / 全部 JSON / 页面四件套 / tabBar 图标 / 自定义 tabBar 组件 / 跳转路径 / WXML class / **WXSS 兼容性：calc(%+rpx)、flex gap、padding 简写含 env()**；当前 0 错误 0 警告）
+- ✅ 烟测脚本：`tools/smoke_roles.py`（15）、`smoke_import.py`（20）、`smoke_reviewer.py`（17）、`smoke_progress_export.py`（33）、`smoke_audit_cleanup.py`（49）、`smoke_tasks_batch.py`（19，含 N+1 护栏）= **153 项全通过**
+- ✅ 缓存层单测：`node tools/test_cache.js`（13 项）——并发去重、TTL 命中、过期先回旧值再后台刷新、代际失效；**切 5 次首页的请求数由 20 降到 4**
+- ✅ 小程序静态自检：`node tools/check_miniprogram.js`（TS 语法 / 全部 JSON / 页面四件套 / tabBar 图标 / 自定义 tabBar 组件 / 跳转路径 / WXML class / **WXSS 兼容性：calc(%+rpx)、flex gap、padding 简写含 env()** / **缓存层接入**；当前 0 错误 0 警告）
 - ⏳ 待做：真机现场验证、生产密钥托管（Vault/KMS）、真实 ASR 辅助审核
 
 ## 十、项目介绍视频

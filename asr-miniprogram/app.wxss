@@ -125,12 +125,13 @@ page {
   }
 }
 /* 骨架屏微光 */
-@keyframes shimmer {
-  from {
-    background-position: -360rpx 0;
+@keyframes skPulse {
+  0%,
+  100% {
+    opacity: 1;
   }
-  to {
-    background-position: 360rpx 0;
+  50% {
+    opacity: 0.5;
   }
 }
 /* 折叠面板展开 */
@@ -222,12 +223,13 @@ page {
   opacity: 0.92;
 }
 
-/* 骨架屏 */
+/* 骨架屏
+   用 opacity 脉冲，而不是 background-position 扫光 —— 后者每帧都要重绘整块渐变，
+   页面上同时出现 2~3 个骨架块时（首页 / 审核台）会明显掉帧；opacity 走合成层。 */
 .sk {
-  background: linear-gradient(90deg, #eaeef4 25%, #f8fafd 37%, #eaeef4 63%);
-  background-size: 360rpx 100%;
-  animation: shimmer 1.15s linear infinite;
+  background: #e6ebf2;
   border-radius: var(--r-sm);
+  animation: skPulse 1.2s ease-in-out infinite;
 }
 
 /* tab 页底部留白：避开自定义 tabBar 与全面屏安全区

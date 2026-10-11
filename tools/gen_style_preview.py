@@ -129,11 +129,35 @@ def tabbar_html():
     return '\n'.join(items)
 
 
-def blob_pos():
+def blob_idx():
+    """当前选中项下标（高亮块的 translateX 为 idx*100%，轨道宽 = 1/4 栏宽）"""
     for i, (_, _, on) in enumerate(TABBAR):
         if on:
-            return str(i * 25 + 12.5)
-    return '12.5'
+            return i
+    return 0
+
+
+def tabbar_strip_html():
+    """4 个下标各渲染一条 tabBar，用来验证 transform 版高亮块的落点是否正确"""
+    out = []
+    for i, (txt, _, _) in enumerate(TABBAR):
+        items = []
+        for j, (t, icon, _) in enumerate(TABBAR):
+            on = j == i
+            items.append(
+                '      <div class="item%s"><div class="ico-wrap"><img class="ico" src="%s" /></div>'
+                '<div class="txt">%s</div></div>' % (' on' if on else '', icon_data(icon + ('-on' if on else '')), t)
+            )
+        out.append(
+            '  <div class="bar-demo">\n'
+            '    <div class="bar">\n'
+            '      <div class="blob-track" style="transform: translateX(%d%%)"><div class="blob"></div></div>\n'
+            '%s\n'
+            '    </div>\n'
+            '    <div class="bar-demo-label">blobIdx = %d → %s</div>\n'
+            '  </div>' % (i * 100, '\n'.join(items), i, txt)
+        )
+    return '\n'.join(out)
 
 
 BODY_RESOURCES = """
@@ -179,12 +203,12 @@ BODY_RESOURCES = """
     <div class="footer">ASR 语音采集 · 两个身份共用同一套导航与规范</div>
   </div>
   <div class="bar">
-    <div class="blob" style="left:%%(blob_pos)s%%"></div>
+    <div class="blob-track" style="transform: translateX(%%(blob_idx)d%%)"><div class="blob"></div></div>
 %(tabbar)s
   </div>
 </div>
 """ % {'rules': rules_html(), 'texts': texts_html(), 'faq': faq_html(),
-   'tabbar': tabbar_html(), 'blob_pos': blob_pos()}
+   'tabbar': tabbar_html(), 'blob_idx': blob_idx()}
 
 DOC = """<!DOCTYPE html>
 <html lang="zh-CN">
@@ -228,10 +252,19 @@ html, body { margin: 0; padding: 0; background: #dfe4ec; }
 /* HTML 的 input 默认带边框，小程序里没有，去掉以还原真机观感 */
 input { border: none; outline: none; background: transparent; }
 .tipbar { font: 12px/1.6 -apple-system, "PingFang SC", sans-serif; color: #5a6470; }
+/* ===== 高亮块落点校验条 ===== */
+.strip { width: 375px; padding: 18px 0 30px; }
+.strip-title { font: 600 14px/1.6 -apple-system, "PingFang SC", sans-serif; color: #12171f; margin: 0 0 12px; }
+.bar-demo { position: relative; width: 375px; height: 73px; margin-bottom: 26px; border-radius: 10px; overflow: hidden; }
+.bar-demo-label { position: absolute; top: -22px; left: 0; font: 12px/1.6 -apple-system, "PingFang SC", sans-serif; color: #5a6470; }
 </style>
 </head>
 <body>
 %(body)s
+<div class="strip">
+  <div class="strip-title">底部导航高亮块落点校验（transform 版，逐个下标）</div>
+%(strip)s
+</div>
 <script>
 // 支持 file:///...style-preview.html#bottom 直接滚到底，用来检查底部留白
 if (location.hash.indexOf('bottom') >= 0) {
@@ -246,7 +279,7 @@ if (location.hash.indexOf('bottom') >= 0) {
 
 def main():
     css = read_css('app.wxss', 'pages/resources/resources.wxss', 'custom-tab-bar/index.wxss')
-    html = DOC % {'css': css, 'body': BODY_RESOURCES}
+    html = DOC % {'css': css, 'body': BODY_RESOURCES, 'strip': tabbar_strip_html()}
     with io.open(OUT, 'w', encoding='utf-8') as f:
         f.write(html)
     print('written', os.path.relpath(OUT, ROOT), len(html), 'bytes')

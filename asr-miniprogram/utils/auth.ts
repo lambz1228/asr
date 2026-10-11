@@ -1,6 +1,7 @@
 import { request } from './request'
 import { getConsentStatus } from './consent'
 import { TAB } from './nav'
+import { cachedFetch, invalidate, refreshFetch, KEY, TTL_ME } from './cache'
 
 // 管理侧角色（可进入管理台：导入任务 / 审核 / 导出）
 export function isManagerRole(role: string): boolean {
@@ -22,11 +23,15 @@ export async function wxLogin(role?: 'admin' | 'collector'): Promise<LoginResult
     data: role ? { code, role } : { code }
   })
   wx.setStorageSync('token', data.token)
+  // 换了账号（含演示身份切换）→ 上一个身份的缓存全部作废
+  invalidate()
   return data
 }
 
 export function logout() {
   wx.removeStorageSync('token')
+  // 退出后必须清缓存，否则换账号登录会读到上一个身份的数据
+  invalidate()
 }
 
 export interface MeResult {
@@ -34,9 +39,21 @@ export interface MeResult {
   role: string
 }
 
-// 获取当前用户角色，用于决定是否展示审核台等管理入口
+// 获取当前用户角色，用于决定是否展示审核台等管理入口。
+// 走缓存：/auth/me 被首页、采集页、我的页、学习资源页各调一次，
+// 有缓存后同一轮切换只会发一个请求，且返回是同步微任务，页面不再等网络。
 export async function getMe(): Promise<MeResult> {
-  return request<MeResult>({ url: '/auth/me', method: 'GET' })
+  const r = await cachedFetch<MeResult>(KEY.me, TTL_ME, () =>
+    request<MeResult>({ url: '/auth/me', method: 'GET' })
+  )
+  return r.data
+}
+
+/** 下拉刷新用：强制绕过缓存重新取角色 */
+export async function reloadMe(): Promise<MeResult> {
+  return refreshFetch<MeResult>(KEY.me, TTL_ME, () =>
+    request<MeResult>({ url: '/auth/me', method: 'GET' })
+  )
 }
 
 export type LoginRoute = 'manager' | 'collector'

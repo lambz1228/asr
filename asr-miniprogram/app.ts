@@ -18,8 +18,10 @@ App<IGlobalData>({
     if (token) {
       this.globalData.token = token
       this.globalData.consentSigned = !!wx.getStorageSync('consentSigned')
-      // 启动时自动重试此前未完成的音频上传（含上传中/失败态的本地记录）
-      retryPendingUploads()
+      // 启动时自动重试此前未完成的音频上传（含上传中/失败态的本地记录）。
+      // 延后 2.5s 再跑：首屏要发 /auth/me、/progress、/tasks、/tasks/pool 四个请求，
+      // 补传（含文件上传）若同时挤进来会拖慢首屏，让用户感觉「一打开就卡」。
+      setTimeout(() => retryPendingUploads(), 2500)
     }
   }
 })

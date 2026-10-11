@@ -255,6 +255,53 @@ for (const f of styleFiles) {
 }
 ok(`WXSS 兼容性检查完成（${styleFiles.length} 个文件）`)
 
+console.log('== 8. 缓存层接入与 setData 数据量护栏 ==')
+// 背景：每个 tab 页 onShow 都会重新拉数据，如果绕过缓存层直接 request，
+// 就会退化成「请求 → 骨架闪 → 全量重渲染」的循环（切 tab 卡顿的主因）。
+// 同样地，把上千条任务直接放进 data 再 setData，是另一个主要卡顿源。
+const CACHE_FILE = path.join(ROOT, 'utils', 'cache.ts')
+if (!fs.existsSync(CACHE_FILE)) {
+  fail('缺少 utils/cache.ts（数据缓存层）——tab 页会退化成每次 onShow 全量重拉')
+} else {
+  const src = fs.readFileSync(CACHE_FILE, 'utf8')
+  for (const api of ['readCache', 'writeCache', 'cachedFetch', 'fetchOnce', 'invalidate']) {
+    src.includes('export function ' + api)
+      ? ok(`cache.ts 导出 ${api}`)
+      : fail(`cache.ts 缺少 ${api} 导出`)
+  }
+  // 并发去重：同 key 的并发请求必须合并，否则多页同时 getMe 会各发一次
+  /inflight/.test(src) ? ok('cache.ts 含并发去重（inflight）') : fail('cache.ts 未实现并发去重')
+}
+
+const TAB_PAGES = ['home', 'resources', 'record', 'profile']
+for (const name of TAB_PAGES) {
+  const f = path.join(ROOT, 'pages', name, name + '.ts')
+  if (!fs.existsSync(f)) {
+    fail(`缺少 tab 页 ${name}`)
+    continue
+  }
+  const src = fs.readFileSync(f, 'utf8')
+  if (!/from '\.\.\/\.\.\/utils\/cache'/.test(src)) {
+    fail(`pages/${name}/${name}.ts 未接入 utils/cache —— 每次切回本页都会重新请求并闪骨架`)
+    continue
+  }
+  // 用 readCache / hasCache 判断「有缓存 → 不铺骨架」，避免切 tab 时白屏闪一下
+  /readCache\(|hasCache\(/.test(src)
+    ? ok(`pages/${name} 已按缓存命中情况决定是否铺骨架`)
+    : warn(`pages/${name} 未用 readCache/hasCache 判断首屏，可能仍会在切 tab 时闪骨架`)
+}
+
+// 全量列表必须放页面实例属性，不能进 data（约定：data 里不许出现 allXxx 数组）
+for (const f of walk(ROOT, (n) => n.endsWith('.wxml'))) {
+  const src = fs.readFileSync(f, 'utf8')
+  for (const m of src.matchAll(/wx:for="\{\{\s*([A-Za-z_$][\w$]*)/g)) {
+    if (/^all[A-Z]/.test(m[1])) {
+      fail(`${rel(f)} 把全量数组 ${m[1]} 绑到了 wx:for —— 应只 setData 渲染所需的条数（见 pages/home 注释）`)
+    }
+  }
+}
+ok('全量数组未直接进入 data / wx:for')
+
 console.log('')
 console.log(`检查完成：${errors.length} 个错误，${warns.length} 个警告`)
 process.exit(errors.length ? 1 : 0)

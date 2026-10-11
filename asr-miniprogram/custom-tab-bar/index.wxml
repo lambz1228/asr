@@ -1,6 +1,9 @@
 <view class="bar">
-  <!-- 活动项高亮块：left 带过渡，切 tab 时横向滑动 -->
-  <view class="blob" style="left:{{blob}}%"></view>
+  <!-- 活动项高亮块：整体走 transform 过渡（合成层，不触发重排），
+       track 宽 = 1/4 栏宽，第 i 项即 translateX(i * 100%) -->
+  <view class="blob-track" style="transform: translateX({{blobIdx * 100}}%)">
+    <view class="blob"></view>
+  </view>
 
   <view
     wx:for="{{list}}"

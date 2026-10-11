@@ -1,4 +1,4 @@
-<view class="page stagger">
+<view class="page {{anim}}">
   <!-- ==================== 顶部问候 · 两个身份共用 ==================== -->
   <view class="hero">
     <view class="hero-blob hero-blob1"></view>
@@ -65,10 +65,10 @@
         <text wx:if="{{pendingCount}}" class="sec-badge">{{pendingCount}}</text>
       </view>
       <text
-        wx:if="{{tasks.length > pendingCount}}"
+        wx:if="{{totalTasks > pendingCount}}"
         class="sec-more"
         bindtap="onToggleTasks"
-      >{{showAllTasks ? '只看待处理' : '全部 ' + tasks.length + ' 条 ›'}}</text>
+      >{{showAllTasks ? '只看待处理' : '全部 ' + totalTasks + ' 条 ›'}}</text>
     </view>
 
     <view
@@ -94,11 +94,11 @@
       </view>
     </view>
 
-    <view wx:if="{{loading}}" class="sk-wrap">
+    <view wx:if="{{skeleton}}" class="sk-wrap">
       <view class="sk sk-card"></view>
       <view class="sk sk-card"></view>
     </view>
-    <view wx:if="{{!loading && !visibleTasks.length}}" class="tip">暂无待处理任务</view>
+    <view wx:if="{{!skeleton && !visibleTasks.length}}" class="tip">暂无待处理任务</view>
     <view wx:if="{{restCount}}" class="tip small">
       还有 {{restCount}} 条未展示，可进入「语言采集」按队列顺序继续录
     </view>
@@ -199,17 +199,17 @@
     </view>
 
     <!-- 采集员排行 -->
-    <block wx:if="{{allCollectors.length}}">
+    <block wx:if="{{collectorCount}}">
       <view class="sec-head">
         <view class="sec-title">
           <view class="sec-bar"></view>
           <text>采集员进度</text>
         </view>
-        <text wx:if="{{allCollectors.length > 5}}" class="sec-more" bindtap="onToggleCollectors">
-          {{showAllCollectors ? '收起' : '全部 ' + allCollectors.length + ' 人 ›'}}
+        <text wx:if="{{collectorCount > 5}}" class="sec-more" bindtap="onToggleCollectors">
+          {{showAllCollectors ? '收起' : '全部 ' + collectorCount + ' 人 ›'}}
         </text>
       </view>
-      <view class="card rank" wx:for="{{showAllCollectors ? allCollectors : topCollectors}}" wx:key="userId">
+      <view class="card rank" wx:for="{{visibleCollectors}}" wx:key="userId">
         <view class="rank-top">
           <text class="rank-id">{{item.userId}}</text>
           <text class="rank-rate">{{item.approved}}/{{item.total}} · {{item.percent}}%</text>
@@ -231,7 +231,7 @@
           <text>任务包</text>
         </view>
       </view>
-      <view wx:if="{{loading}}" class="sk-wrap">
+      <view wx:if="{{skeleton}}" class="sk-wrap">
         <view class="sk sk-card"></view>
       </view>
       <view wx:elif="{{pkgs.length === 0}}" class="tip">暂无任务包，去「导入任务」创建一个</view>

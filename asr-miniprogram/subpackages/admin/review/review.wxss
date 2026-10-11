@@ -182,3 +182,30 @@
 .flag {
   border-radius: var(--r-sm);
 }
+
+/* ============ 列表分页渲染：骨架屏 / 计数 / 加载更多 ============ */
+.sk-wrap {
+  padding: 4rpx 0;
+}
+.sk-card {
+  height: 220rpx;
+  margin-bottom: 16rpx;
+}
+.count-tip {
+  text-align: center;
+  color: var(--t3);
+  font-size: 23rpx;
+  margin: 8rpx 0 16rpx;
+}
+.more-row {
+  display: flex;
+  justify-content: center;
+  padding: 8rpx 0 24rpx;
+}
+.more-btn {
+  color: var(--brand);
+  background: var(--brand-soft);
+  border-radius: var(--r-md);
+  font-size: 26rpx;
+  padding: 0 40rpx;
+}

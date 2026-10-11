@@ -1,4 +1,4 @@
-<view class="page stagger">
+<view class="page {{anim}}">
   <view class="topbar">
     <scroll-view class="tabs" scroll-x>
       <view class="tab {{filter==='uploaded'?'on':''}}" data-f="uploaded" bindtap="setFilter">待审核</view>
@@ -9,9 +9,13 @@
     <button class="export-btn" size="mini" bindtap="onExport">导出</button>
   </view>
 
-  <view wx:if="{{loading}}" class="tip">加载中...</view>
+  <view wx:if="{{skeleton}}" class="sk-wrap">
+    <view class="sk sk-card"></view>
+    <view class="sk sk-card"></view>
+  </view>
   <block wx:else>
     <view wx:if="{{displayItems.length === 0}}" class="tip">暂无记录</view>
+    <view wx:if="{{matched}}" class="count-tip">共 {{matched}} 条，已显示 {{shownCount}} 条</view>
     <view wx:for="{{displayItems}}" wx:key="recordingId" class="card">
       <view class="card-head">
         <text class="rid">{{item.recordingId}}</text>
@@ -36,6 +40,9 @@
         </block>
         <text wx:else class="reviewed">已处理</text>
       </view>
+    </view>
+    <view wx:if="{{canMore}}" class="more-row">
+      <button class="more-btn" size="mini" hover-class="press" bindtap="onMore">加载更多</button>
     </view>
   </block>
 </view>

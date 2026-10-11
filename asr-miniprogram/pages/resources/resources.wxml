@@ -1,4 +1,4 @@
-<view class="page stagger">
+<view class="page {{anim}}">
   <!-- ==================== 顶部 ==================== -->
   <view class="hero">
     <view class="hero-blob hero-blob1"></view>
@@ -74,7 +74,7 @@
   <block wx:if="{{isCollector}}">
     <view class="sec-head">
       <view class="sec-title"><view class="sec-bar violet"></view><text>我的文本库</text></view>
-      <text class="sec-more">{{filtered.length}}/{{texts.length}} 条</text>
+      <text class="sec-more">{{shownCount}}/{{textCount}} 条</text>
     </view>
     <view class="search">
       <text class="search-ico">🔍</text>
@@ -88,7 +88,7 @@
       />
       <text wx:if="{{keyword}}" class="search-clear" bindtap="clearKeyword">✕</text>
     </view>
-    <view wx:if="{{loading}}" class="sk-wrap">
+    <view wx:if="{{skeleton}}" class="sk-wrap">
       <view class="sk sk-line"></view>
       <view class="sk sk-line"></view>
       <view class="sk sk-line"></view>
@@ -105,8 +105,8 @@
       <view class="text-line">{{item.text}}</view>
       <text class="status {{item.status}}">{{statusText[item.status] || item.status}}</text>
     </view>
-    <view wx:if="{{!loading && !filtered.length}}" class="tip">
-      {{texts.length ? '没有匹配的文本' : '暂无文本，等待管理员下发任务'}}
+    <view wx:if="{{!skeleton && !filtered.length}}" class="tip">
+      {{textCount ? '没有匹配的文本' : '暂无文本，等待管理员下发任务'}}
     </view>
   </block>
 

@@ -1,4 +1,4 @@
-<view class="page stagger">
+<view class="page {{anim}}">
   <!-- ==================== 身份卡 ==================== -->
   <view class="me">
     <view class="me-blob me-blob1"></view>

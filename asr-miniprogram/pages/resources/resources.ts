@@ -3,6 +3,7 @@ import { getMe } from '../../utils/auth'
 import { getConsentStatus } from '../../utils/consent'
 import { goRecordTab } from '../../utils/nav'
 import { openPrivacyContract } from '../../utils/privacy'
+import { cachedFetch, invalidate, readCache, KEY, TTL_DATA } from '../../utils/cache'
 
 interface TaskItem {
   id: string
@@ -62,12 +63,19 @@ const FAQ = [
   }
 ]
 
+// 文本库一次最多渲染多少条：任务量可能上千，全量渲染会直接卡住页面
+const TEXT_ROWS = 30
+
 // 学习资源：两个身份共用的「规范 + 素材」页
 //   采集员：录音规范、采集前自检、文本库检索（点按直进采集）、常见退回原因
 //   管理员：录音规范 + 导入格式说明 / 导出说明 / 审核入口
+//
+// 性能约定：本页内容绝大部分是静态规范文案，真正依赖网络的只有角色与文本库。
+// 全量文本放实例属性 allTexts，data 里只放渲染用的前 30 条，避免整表塞进 setData。
 Page({
   data: {
-    loading: true,
+    skeleton: false,
+    anim: '',
     role: '',
     roleText: '',
     isManager: false,
@@ -78,21 +86,32 @@ Page({
     openFaq: -1,
     // 文本库（采集员）
     keyword: '',
-    texts: [] as TaskItem[],
     filtered: [] as TaskItem[],
+    textCount: 0,
+    shownCount: 0,
     statusText: STATUS_TEXT,
     templateSample: TEMPLATE_SAMPLE
   },
+
+  allTexts: [] as TaskItem[],
+  rendered: false,
+  animTimer: null as any,
 
   onShow() {
     this.load()
   },
   onPullDownRefresh() {
+    // 下拉 = 明确要最新数据
+    invalidate()
     this.load().finally(() => wx.stopPullDownRefresh())
+  },
+  onUnload() {
+    if (this.animTimer) clearTimeout(this.animTimer)
   },
 
   async load() {
-    this.setData({ loading: true })
+    const warm = readCache(KEY.me) !== null
+    if (!this.rendered && !warm) this.setData({ skeleton: true })
     try {
       const me = await getMe()
       const isManager = me.role === 'admin' || me.role === 'reviewer'
@@ -103,27 +122,47 @@ Page({
         isCollector: !isManager
       })
       if (isManager) {
-        this.setData({ texts: [], filtered: [] })
+        this.allTexts = []
+        this.setData({ filtered: [], textCount: 0, shownCount: 0 })
         return
       }
       getConsentStatus()
         .then((st) => this.setData({ consentSigned: !!st.signed }))
         .catch(() => {})
       try {
-        const res = await request<{ list: TaskItem[] }>({ url: '/tasks' })
-        const list = res.list || []
-        this.setData({ texts: list })
-        this.applyFilter()
+        const r = await cachedFetch<{ list: TaskItem[] }>(
+          KEY.tasks,
+          TTL_DATA,
+          () => request<{ list: TaskItem[] }>({ url: '/tasks' }),
+          (fresh) => this.applyTexts(fresh.list || [])
+        )
+        this.applyTexts(r.data.list || [])
       } catch {
-        this.setData({ texts: [], filtered: [] })
+        this.applyTexts([])
       }
     } catch (e: any) {
       wx.showToast({ title: (e && e.message) || '加载失败', icon: 'none' })
     } finally {
-      this.setData({ loading: false })
+      this.markRendered()
     }
   },
 
+  // 首屏就绪：关骨架 + 一次性入场动画（之后刷新不再重播）
+  markRendered() {
+    if (this.rendered) {
+      if (this.data.skeleton) this.setData({ skeleton: false })
+      return
+    }
+    this.rendered = true
+    this.setData({ skeleton: false, anim: 'stagger' })
+    this.animTimer = setTimeout(() => this.setData({ anim: '' }), 1200)
+  },
+
+  applyTexts(list: TaskItem[]) {
+    this.allTexts = list
+    this.setData({ textCount: list.length })
+    this.applyFilter()
+  },
   onKeyword(e: any) {
     this.setData({ keyword: e.detail.value || '' })
     this.applyFilter()
@@ -134,8 +173,9 @@ Page({
   },
   applyFilter() {
     const kw: string = (this.data.keyword || '').trim()
-    const list = this.data.texts
-    this.setData({ filtered: kw ? list.filter((t) => t.text.indexOf(kw) >= 0) : list })
+    const list = this.allTexts
+    const matched = kw ? list.filter((t) => t.text.indexOf(kw) >= 0) : list
+    this.setData({ filtered: matched.slice(0, TEXT_ROWS), shownCount: matched.length })
   },
   onTapText(e: any) {
     goRecordTab(e.currentTarget.dataset.id)

@@ -1,5 +1,5 @@
 // 自定义 tabBar：管理员 / 采集员共用同一套底部导航
-// 动效：活动项高亮块横向滑动（left 过渡）+ 图标弹跳（不做震动反馈）
+// 动效：活动项高亮块横向滑动（transform 过渡，走合成层）+ 图标弹跳
 // 说明：组件自己从当前页面路由解析所处下标，页面无需手动同步 selected，
 //      这样即使某个 tab 页被缓存复用，高亮状态也不会错位。
 const LIST = [
@@ -29,11 +29,6 @@ const LIST = [
   }
 ]
 
-// 每个 tab 占 1/4 宽，返回该项中心点的百分比位置（高亮块据此横向滑动）
-function centerOf(index) {
-  return index * 25 + 12.5
-}
-
 function gdata() {
   const app = getApp()
   if (app && !app.globalData) app.globalData = {}
@@ -43,9 +38,10 @@ function gdata() {
 Component({
   data: {
     list: LIST,
+    // 高亮图标 / 文案所属项（立即生效）
     selected: 0,
-    // 高亮块的 left（百分比）
-    blob: centerOf(0)
+    // 高亮块所在项：与 selected 分开，才能「先瞬移回上一次所在项再滑过来」
+    blobIdx: 0
   },
 
   attached() {
@@ -53,9 +49,9 @@ Component({
     const g = gdata()
     const prev = g && typeof g.tabIndex === 'number' ? g.tabIndex : routed
     // 先落到「上一次所在的 tab」，下一帧再滑到当前项 —— 切 tab 时有横滑动效
-    this.setData({ selected: routed, blob: centerOf(prev) })
+    this.setData({ selected: routed, blobIdx: prev })
     if (prev !== routed) {
-      setTimeout(() => this.setData({ blob: centerOf(routed) }), 32)
+      setTimeout(() => this.setData({ blobIdx: routed }), 32)
     }
     if (g) g.tabIndex = routed
   },
@@ -67,7 +63,7 @@ Component({
       const g = gdata()
       const prev = g && typeof g.tabIndex === 'number' ? g.tabIndex : routed
       if (prev !== routed) {
-        this.setData({ blob: centerOf(prev) })
+        this.setData({ blobIdx: prev })
         setTimeout(() => this.settle(routed), 32)
       } else {
         this.settle(routed)
@@ -88,8 +84,8 @@ Component({
     settle(index) {
       const g = gdata()
       if (g) g.tabIndex = index
-      if (this.data.selected !== index || this.data.blob !== centerOf(index)) {
-        this.setData({ selected: index, blob: centerOf(index) })
+      if (this.data.selected !== index || this.data.blobIdx !== index) {
+        this.setData({ selected: index, blobIdx: index })
       }
     },
 
@@ -104,7 +100,7 @@ Component({
       }
       // 立即推位（点击即有反馈）；globalData.tabIndex 仍保留「离开前所在的 tab」，
       // 由目标页 pageLifetimes.show 先瞬移回该位置再滑过来，形成横滑动效
-      this.setData({ selected: i, blob: centerOf(i) })
+      this.setData({ selected: i, blobIdx: i })
       wx.switchTab({ url: item.pagePath })
     }
   }

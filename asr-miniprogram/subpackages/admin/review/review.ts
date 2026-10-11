@@ -1,4 +1,5 @@
 import { request } from '../../../utils/request'
+import { cachedFetch, invalidate, invalidateWorkData, KEY, TTL_DATA } from '../../../utils/cache'
 
 interface AudioItem {
   recordingId: string
@@ -28,17 +29,28 @@ const FLAG_TEXT: Record<string, string> = {
   recording_interrupted: '录音曾中断'
 }
 
+// 审核列表一次渲染多少条：录音记录可能上百条，全量重渲染会明显掉帧
+const REVIEW_ROWS = 30
+
 Page({
   data: {
     filter: 'uploaded',
-    items: [] as AudioItem[],
+    // 只放渲染用的那几条；全量在实例属性 allItems 上（不进 setData）
     displayItems: [] as AudioItem[],
-    loading: true,
+    matched: 0,
+    shownCount: 0,
+    canMore: false,
+    skeleton: true,
+    anim: '',
     playingId: '' as string,
     statusText: STATUS_TEXT,
     flagText: FLAG_TEXT
   },
   audioCtx: null as any,
+  allItems: [] as AudioItem[],
+  rows: REVIEW_ROWS,
+  rendered: false,
+  animTimer: null as any,
 
   onShow() {
     this.load()
@@ -48,33 +60,67 @@ Page({
   },
   onUnload() {
     this.stopPlay()
+    if (this.animTimer) clearTimeout(this.animTimer)
   },
   onPullDownRefresh() {
-    this.load()
+    invalidate(KEY.audios)
+    this.load().finally(() => wx.stopPullDownRefresh())
   },
 
   async load() {
-    this.setData({ loading: true })
+    if (!this.rendered) this.setData({ skeleton: true })
     try {
-      const res = await request<{ list: AudioItem[] }>({ url: '/admin/audios' })
-      this.setData({ items: res.list || [] })
-      this.applyFilter()
+      const r = await cachedFetch<{ list: AudioItem[] }>(
+        KEY.audios,
+        TTL_DATA,
+        () => request<{ list: AudioItem[] }>({ url: '/admin/audios' }),
+        (fresh) => this.applyItems((fresh && fresh.list) || [])
+      )
+      this.applyItems(r.data.list || [])
     } catch (e: any) {
       wx.showToast({ title: e.message || '加载失败', icon: 'none' })
     } finally {
-      this.setData({ loading: false })
-      wx.stopPullDownRefresh()
+      this.markRendered()
     }
+  },
+
+  // 首屏就绪：骨架屏关掉，入场动画只播一次
+  markRendered() {
+    if (this.rendered) {
+      if (this.data.skeleton) this.setData({ skeleton: false })
+      return
+    }
+    this.rendered = true
+    this.setData({ skeleton: false, anim: 'stagger' })
+    this.animTimer = setTimeout(() => this.setData({ anim: '' }), 1200)
+  },
+
+  applyItems(list: AudioItem[]) {
+    this.allItems = list
+    this.rows = REVIEW_ROWS
+    this.applyFilter()
   },
 
   setFilter(e: any) {
     this.setData({ filter: e.currentTarget.dataset.f })
+    this.rows = REVIEW_ROWS
     this.applyFilter()
   },
+  // 过滤后只把前 rows 条交给视图，其余等「加载更多」再补
   applyFilter() {
     const f = this.data.filter
-    const list = f === 'all' ? this.data.items : this.data.items.filter((i) => i.status === f)
-    this.setData({ displayItems: list })
+    const matched = f === 'all' ? this.allItems : this.allItems.filter((i) => i.status === f)
+    const page = matched.slice(0, this.rows)
+    this.setData({
+      displayItems: page,
+      matched: matched.length,
+      shownCount: page.length,
+      canMore: matched.length > page.length
+    })
+  },
+  onMore() {
+    this.rows += REVIEW_ROWS
+    this.applyFilter()
   },
 
   buildUrl(item: AudioItem): string {
@@ -94,7 +140,7 @@ Page({
       this.stopPlay()
       return
     }
-    const item = this.data.items.find((i) => i.recordingId === id)
+    const item = this.allItems.find((i) => i.recordingId === id)
     if (!item) return
     this.stopPlay()
     const url = this.buildUrl(item)
@@ -165,9 +211,12 @@ Page({
     })
   },
   markReviewed(id: string, status: string) {
-    const items = this.data.items.map((i) => (i.recordingId === id ? { ...i, status } : i))
-    this.setData({ items })
+    // 就地更新实例属性上的全量列表，再按当前分页重算视图
+    this.allItems = this.allItems.map((i) => (i.recordingId === id ? { ...i, status } : i))
     this.applyFilter()
+    // 审核结果会影响采集员进度与全局完成率，相关缓存作废
+    invalidate(KEY.audios)
+    invalidateWorkData()
   },
 
   async onExport() {

@@ -53,24 +53,36 @@ async def list_tasks(
         )
         pkg_names = {pid: name for pid, name in pk.all()}
 
+    # 批量取「最近一次退回原因」，同样避免 N+1：
+    # 原来每条 rejected 任务都要单独查一次 ReviewLog，退回件一多（几十上百条）
+    # 就是几十上百次往返，首屏明显变慢。这里一次查完再在内存里取每个任务的最新一条。
+    rejected_ids = [asg.assignment_id for asg, _ in pairs if asg.status == "rejected"]
+    reject_reasons: dict[str, str | None] = {}
+    if rejected_ids:
+        rr = await db.execute(
+            select(
+                models.Recording.assignment_id,
+                models.ReviewLog.reason,
+                models.ReviewLog.id,
+            )
+            .join(
+                models.ReviewLog,
+                models.ReviewLog.recording_id == models.Recording.recording_id,
+            )
+            .where(
+                models.Recording.assignment_id.in_(rejected_ids),
+                models.ReviewLog.action == "reject",
+            )
+            # 倒序：每个任务第一次出现的即最新一条
+            .order_by(models.ReviewLog.id.desc())
+        )
+        for aid, reason, _log_id in rr.all():
+            if aid not in reject_reasons:
+                reject_reasons[aid] = reason
+
     tasks = []
     for asg, text in pairs:
-        reason = None
-        if asg.status == "rejected":
-            # 取该任务下最新一次退回记录的原因
-            reason = await db.scalar(
-                select(models.ReviewLog.reason)
-                .join(
-                    models.Recording,
-                    models.Recording.recording_id == models.ReviewLog.recording_id,
-                )
-                .where(
-                    models.Recording.assignment_id == asg.assignment_id,
-                    models.ReviewLog.action == "reject",
-                )
-                .order_by(models.ReviewLog.id.desc())
-                .limit(1)
-            )
+        reason = reject_reasons.get(asg.assignment_id) if asg.status == "rejected" else None
         tasks.append(
             {
                 "id": asg.assignment_id,

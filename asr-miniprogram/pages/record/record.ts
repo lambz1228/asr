@@ -11,6 +11,7 @@ import {
 import { saveAndUpload } from '../../utils/uploader'
 import { ensurePrivacyAuthorize, openPrivacyContract } from '../../utils/privacy'
 import { takePendingTask, TAB } from '../../utils/nav'
+import { cachedFetch, invalidateWorkData, readCache, KEY, TTL_DATA } from '../../utils/cache'
 
 // 队列中的一条任务（来自 GET /tasks）
 interface QItem {
@@ -36,8 +37,8 @@ function fmtClock(sec: number): string {
 
 Page({
   data: {
-    loading: true,
-    queue: [] as QItem[],
+    // 仅「首次进入且无缓存」时铺骨架：有缓存时队列直接渲染，切 tab 不闪
+    skeleton: false,
     index: 0,
     total: 0,
     current: null as QItem | null,
@@ -68,6 +69,9 @@ Page({
   audioCtx: null as any,
   timer: null as any,
   appHideHandler: null as any,
+  // 全量队列存实例属性：上千条任务不进 setData 通道，只把当前这条放 data
+  allQueue: [] as QItem[],
+  rendered: false,
   initialTaskId: '',
   fallbackText: '',
   fallbackVersion: 0,
@@ -98,6 +102,7 @@ Page({
       wx.stopPullDownRefresh()
       return
     }
+    invalidateWorkData()
     this.syncQueue().finally(() => wx.stopPullDownRefresh())
   },
   onUnload() {
@@ -121,43 +126,68 @@ Page({
 
   // 同步「我的任务」队列，并定位到需要采集的那一条：
   //   优先取首页 / 学习资源页跨 tab 传入的待录任务，其次取本页首次进入时的参数
+  //
+  // 走缓存：首页 / 学习资源页刚拉过的 /tasks 在这里直接命中，
+  // 来回切 tab 只有首次会真的发请求；旧值时后台静默刷新队列内容。
   async syncQueue() {
     const pending = takePendingTask()
-    this.setData({ loading: true })
+    if (!this.rendered && readCache(KEY.me) === null) this.setData({ skeleton: true })
     try {
-      const res = await request<{ list: QItem[] }>({ url: '/tasks' })
-      const list = res.list || []
-      if (!list.length) {
-        this.setData({ loading: false })
-        if (!this.data.queue.length) this.applyFallback()
-        return
-      }
-      const current = this.data.current
-      // 首次定位用的入口参数只生效一次，避免后续回到本页反复跳回旧任务
-      const targetId = pending || this.initialTaskId || (current ? current.id : '')
-      this.initialTaskId = ''
-      this.setData({ queue: list, total: list.length, loading: false, empty: false })
-
-      const idx = targetId ? list.findIndex((x) => x.id === targetId) : -1
-      const curIdx = current ? list.findIndex((x) => x.id === current.id) : -1
-      if (idx >= 0) {
-        // 目标就是当前这条时只刷新数据，避免重置已录未提交的音频
-        if (current && current.id === targetId) this.refreshCurrent(idx)
-        else this.applyTask(idx)
-      } else if (curIdx >= 0) {
-        this.refreshCurrent(curIdx)
-      } else {
-        this.applyTask(0)
-      }
+      const r = await cachedFetch<{ list: QItem[] }>(
+        KEY.tasks,
+        TTL_DATA,
+        () => request<{ list: QItem[] }>({ url: '/tasks' }),
+        // 后台刷新只更新队列数据，不重定位、不打断已录未提交的音频
+        (fresh) => this.applyQueue((fresh && fresh.list) || [], '')
+      )
+      this.applyQueue(r.data.list || [], pending)
     } catch (e: any) {
-      this.setData({ loading: false, statusText: '任务加载失败，可下拉重试' })
-      if (!this.data.queue.length) this.applyFallback()
+      this.setData({ statusText: '任务加载失败，可下拉重试' })
+      if (!this.allQueue.length) this.applyFallback()
+    } finally {
+      this.markRendered()
+    }
+  },
+
+  markRendered() {
+    if (this.rendered) {
+      if (this.data.skeleton) this.setData({ skeleton: false })
+      return
+    }
+    this.rendered = true
+    this.setData({ skeleton: false })
+  },
+
+  // 应用一份队列：全量存实例属性，data 里只留 total 与当前条目
+  applyQueue(list: QItem[], pending: string) {
+    this.allQueue = list
+    if (!list.length) {
+      if (!this.data.total) this.applyFallback()
+      else this.setData({ total: 0 })
+      return
+    }
+    const current = this.data.current
+    // 首次定位用的入口参数只生效一次，避免后续回到本页反复跳回旧任务
+    const targetId = pending || this.initialTaskId || (current ? current.id : '')
+    this.initialTaskId = ''
+    this.setData({ total: list.length, empty: false })
+
+    const idx = targetId ? list.findIndex((x) => x.id === targetId) : -1
+    const curIdx = current ? list.findIndex((x) => x.id === current.id) : -1
+    if (idx >= 0) {
+      // 目标就是当前这条时只刷新数据，避免重置已录未提交的音频
+      if (current && current.id === targetId) this.refreshCurrent(idx)
+      else this.applyTask(idx)
+    } else if (curIdx >= 0) {
+      this.refreshCurrent(curIdx)
+    } else {
+      this.applyTask(0)
     }
   },
 
   // 列表数据变化但保留当前选中项与录音状态（如任务被退回后重新拉取）
   refreshCurrent(i: number) {
-    const item = this.data.queue[i]
+    const item = this.allQueue[i]
     if (!item) return
     this.setData({
       index: i,
@@ -175,7 +205,8 @@ Page({
     }
     if (!this.initialTaskId) {
       // 无任务可采（未分配 / 管理员身份）：展示空态，不构造假任务
-      this.setData({ queue: [], total: 0, current: null, index: 0, empty: true })
+      this.allQueue = []
+      this.setData({ total: 0, current: null, index: 0, empty: true })
       return
     }
     const single: QItem = {
@@ -188,13 +219,14 @@ Page({
       version: this.fallbackVersion,
       rejectReason: null
     }
-    this.setData({ queue: [single], total: 1, empty: false })
+    this.allQueue = [single]
+    this.setData({ total: 1, empty: false })
     this.applyTask(0)
   },
 
   // 切换到第 i 条：重置录音区状态
   applyTask(i: number) {
-    const item = this.data.queue[i]
+    const item = this.allQueue[i]
     if (!item) return
     this.stopPlay()
     this.clearTimer()
@@ -420,7 +452,7 @@ Page({
   // 本页是 tab 页，不能 navigateBack，改为留在本页并引导回首页看进度
   advanceOrBack() {
     const i = this.data.index
-    if (i + 1 < this.data.queue.length) {
+    if (i + 1 < this.allQueue.length) {
       this.applyTask(i + 1)
       return
     }
@@ -469,12 +501,19 @@ Page({
         this.data.interrupted
       )
       wx.hideLoading()
-      // 本地队列状态同步，避免自动跳到下一条后再切回来仍是旧的
-      const q = this.data.queue.slice()
+      // 本地队列状态同步（队列本体在实例属性上，不进 setData），避免自动跳到下一条后
+      // 再切回来仍是旧的；同时让首页 / 学习资源页的缓存失效，回去能看到新状态
+      const q = this.allQueue.slice()
       if (q[this.data.index]) {
         q[this.data.index] = { ...q[this.data.index], status: 'uploaded', version: this.data.version }
       }
-      this.setData({ queue: q, recLabel: '已提交', statusText: '上传成功' })
+      this.allQueue = q
+      invalidateWorkData()
+      this.setData({
+        current: q[this.data.index] || this.data.current,
+        recLabel: '已提交',
+        statusText: '上传成功'
+      })
       this.flashToast('上传成功')
       wx.showToast({ title: '上传成功', icon: 'success' })
       setTimeout(() => this.advanceOrBack(), 900)

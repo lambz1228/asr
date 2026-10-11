@@ -1,4 +1,9 @@
-/* 自定义 tabBar：与页面同一套视觉语言（白色毛玻璃底 + 滑动高亮块） */
+/* 自定义 tabBar：与页面同一套视觉语言（白色底 + 滑动高亮块）
+   性能注意：
+   1. 不要用 backdrop-filter: blur() —— 全宽固定元素实时高斯模糊在 Android 上
+      是知名掉帧点（每帧都要重取背景并模糊），切 tab / 滚动时尤其明显。
+      这里用不透明底色 + 细上边线就够了。
+   2. 高亮块滑动必须走 transform（合成层），不能用 left（每帧触发重排）。 */
 .bar {
   position: fixed;
   left: 0;
@@ -9,26 +14,35 @@
   padding-bottom: env(safe-area-inset-bottom);
   display: flex;
   align-items: stretch;
-  /* 接近不透明 + 背景模糊：既保留一点毛玻璃质感，又不会透出页面文字显得脏 */
-  background: rgba(255, 255, 255, 0.98);
-  backdrop-filter: blur(18px);
-  -webkit-backdrop-filter: blur(18px);
+  background: #ffffff;
   border-top: 1rpx solid rgba(20, 33, 56, 0.07);
-  box-shadow: 0 -8rpx 28rpx rgba(20, 33, 56, 0.07);
+  box-shadow: 0 -4rpx 16rpx rgba(20, 33, 56, 0.05);
 }
 
-/* 高亮块：宽 132rpx，left 为项中心百分比，用 margin-left 居中 */
+/* 高亮块轨道：宽 = 1/4 栏宽，translateX(i * 100%) 即第 i 项中心 */
+.blob-track {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 25%;
+  height: 100%;
+  pointer-events: none;
+  /* 提升为合成层：过渡期间不参与重排 / 重绘 */
+  will-change: transform;
+  transition: transform 0.4s cubic-bezier(0.22, 0.9, 0.32, 1);
+}
+
+/* 高亮块：固定在轨道中心 */
 .blob {
   position: absolute;
   top: 12rpx;
+  left: 50%;
   width: 132rpx;
   height: 84rpx;
   margin-left: -66rpx;
   border-radius: 26rpx;
   background: linear-gradient(135deg, rgba(26, 140, 255, 0.18), rgba(88, 182, 255, 0.1));
   box-shadow: 0 6rpx 18rpx rgba(26, 140, 255, 0.18);
-  transition: left 0.4s cubic-bezier(0.22, 0.9, 0.32, 1);
-  pointer-events: none;
 }
 
 .item {
@@ -54,12 +68,13 @@
   height: 46rpx;
 }
 
+/* 只过渡颜色：font-weight 过渡会触发文字重新排版（每帧 layout），去掉 */
 .txt {
   margin-top: 2rpx;
   font-size: 20rpx;
   line-height: 1.2;
   color: #9aa0a6;
-  transition: color 0.28s ease, font-weight 0.28s ease;
+  transition: color 0.28s ease;
 }
 
 /* 选中态：图标弹跳放大 + 文案变蓝加粗 */

@@ -25,14 +25,14 @@
   </view>
 
   <!-- 加载骨架 -->
-  <view wx:if="{{loading}}" class="sk-wrap">
+  <view wx:if="{{skeleton}}" class="sk-wrap">
     <view class="sk sk-text"></view>
     <view class="sk sk-meta"></view>
     <view class="sk sk-panel"></view>
   </view>
 
   <!-- 空态：没有可采集的任务 -->
-  <view wx:if="{{!loading && empty}}" class="empty">
+  <view wx:if="{{!skeleton && empty}}" class="empty">
     <view class="empty-ico-wrap"><text class="empty-ico">🎙</text></view>
     <view class="empty-title">{{isManager ? '当前身份无需采集' : '暂无可采集任务'}}</view>
     <view class="empty-desc">
