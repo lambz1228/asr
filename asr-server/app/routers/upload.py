@@ -19,6 +19,8 @@ async def upload_audio(
     file: UploadFile = File(...),
     text_id: str = Form("", alias="textId"),
     upload_id: str = Form("", alias="uploadId"),
+    # 端侧标记：录音过程中被来电/切后台打断（方案 §3），进 quality_flags 供审核参考
+    interrupted: str = Form("", alias="interrupted"),
     principal=Depends(require_voice_consent),
     db=Depends(get_db),
 ):
@@ -62,7 +64,12 @@ async def upload_audio(
             wav_key = f"wav/{task_id}/{upload_id}.wav"
             await storage.save(wav_key, proc["wav_bytes"])
 
-    # 4) 关联任务并计算录音版本：退回重录递增，历史版本全部保留（方案 §10.2）
+    # 4) 端侧中断标记并入质量标记（不阻断提交，由审核员判断）
+    flags = list(flags)
+    if str(interrupted).strip().lower() in ("1", "true", "yes"):
+        flags.append("recording_interrupted")
+
+    # 5) 关联任务并计算录音版本：退回重录递增，历史版本全部保留（方案 §10.2）
     asg = await db.scalar(
         select(models.TaskAssignment).where(
             models.TaskAssignment.assignment_id == task_id
@@ -70,7 +77,7 @@ async def upload_audio(
     )
     version = (asg.version + 1) if asg else 1
 
-    # 5) 落库：录音版本 + 关联任务
+    # 6) 落库：录音版本 + 关联任务
     rec_id = "r_" + uuid.uuid4().hex[:10]
     rec = models.Recording(
         recording_id=rec_id,
@@ -89,7 +96,7 @@ async def upload_audio(
     )
     db.add(rec)
 
-    # 6) 更新任务状态 / 版本
+    # 7) 更新任务状态 / 版本
     if asg:
         asg.version = version
         asg.status = "uploaded"

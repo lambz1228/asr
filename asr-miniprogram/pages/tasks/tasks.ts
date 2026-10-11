@@ -9,6 +9,17 @@ interface TaskItem {
   rejectReason: string | null
 }
 
+// 个人进度（GET /progress）：完成率 = 已通过 / 总任务数
+interface Progress {
+  total: number
+  pending: number
+  uploaded: number
+  approved: number
+  rejected: number
+  recorded: number
+  completionRate: number
+}
+
 const STATUS_TEXT: Record<string, string> = {
   pending: '待领取',
   claimed: '待录制',
@@ -27,7 +38,9 @@ Page({
     loading: true,
     canManage: false, // 是否为 admin / reviewer，决定是否展示管理台入口
     statusText: STATUS_TEXT,
-    claiming: '' as string
+    claiming: '' as string,
+    progress: null as Progress | null,
+    percent: 0
   },
   onShow() {
     this.refresh()
@@ -37,7 +50,15 @@ Page({
     this.refresh().finally(() => wx.stopPullDownRefresh())
   },
   refresh() {
-    return Promise.all([this.loadTasks(), this.loadPool()])
+    return Promise.all([this.loadTasks(), this.loadPool(), this.loadProgress()])
+  },
+  async loadProgress() {
+    try {
+      const p = await request<Progress>({ url: '/progress' })
+      this.setData({ progress: p, percent: Math.round((p.completionRate || 0) * 100) })
+    } catch {
+      this.setData({ progress: null, percent: 0 })
+    }
   },
   async loadTasks() {
     this.setData({ loading: true })

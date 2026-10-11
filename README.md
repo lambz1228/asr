@@ -32,7 +32,7 @@ Uvicorn running on http://0.0.0.0:8000
 
 1. 打开**微信开发者工具**（稳定版）。
 2. 点「导入项目」→ 目录选 `E:/asr/asr-miniprogram`。
-3. AppID 选「**测试号**」（`project.config.json` 里已内置 `touristappid`，并已关闭域名校验，模拟器可直接连本机后端）。
+3. AppID 选「**测试号**」或你自己的 AppID（`project.config.json` 里当前填的是 `wx43432dad19c9d452`，按需替换；已关闭域名校验，模拟器可直接连本机后端）。
 4. 点「编译」，模拟器出现登录页即成功。
 
 ### 第 3 步：走一遍完整演示
@@ -80,6 +80,7 @@ E:/asr/
 ├── 小程序项目档案.md                      # 工程现状档案（页面/接口/待办清单）
 ├── 真机录音参数验证清单.md                 # 真机验证 SOP
 ├── 任务导入格式说明.md                    # 管理员导入任务的格式与接口
+├── 数据集导出说明.md                      # 导出 ZIP 结构与 metadata 字段字典（交付给下游）
 ├── 任务导入模板.csv                       # CSV 导入模板
 ├── asr-miniprogram/                     # 微信小程序（原生 + TypeScript，含管理端分包）
 ├── asr-server/                          # FastAPI 后端（PostgreSQL / 对象存储 / FFmpeg）
@@ -87,7 +88,8 @@ E:/asr/
     ├── verify_recording.py              # 真机录音验证脚本
     ├── smoke_roles.py                   # 角色通路烟测（15 项）
     ├── smoke_import.py                  # Excel 导入与统一下发烟测（17 项）
-    └── smoke_reviewer.py                # 审核员权限/版本递增/退回原因烟测（17 项）
+    ├── smoke_reviewer.py                # 审核员权限/版本递增/退回原因烟测（17 项）
+    └── smoke_progress_export.py          # 进度统计/导出完整性/录音中断烟测（33 项）
 ```
 
 ---
@@ -134,7 +136,26 @@ python tools/verify_recording.py --dir ./samples \
 
 完整说明（JSON 格式、curl 示例、multipart 参数表、约束）见 **`任务导入格式说明.md`**。
 
-## 六、常见问题
+## 六、导出数据集（管理员）
+
+审核台点「导出」，把**已通过**的录音打包成 `dataset.zip`：
+
+```
+dataset.zip
+├── audio/                     # 每条录音一个文件（优先转码后的 WAV，无则原始 aac/mp3）
+│   └── r_xxxxxxxxxx.wav
+├── metadata.csv               # 台账：编号 / 文本 / 采集人 / 时间 / 时长 / 采样率 / 声道 / 参数版本 / 审核状态
+├── transcripts.txt            # 纯文本台账，每行 `音频编号<TAB>文本`，编号与音频一一对应
+└── manifest.json              # 文件清单 + MD5 + 导出时间 + 总条数
+```
+
+- 单次 ≤ 1000 条：同步直接返回 ZIP；超过则**异步打包**，前台轮询进度并拿到签名下载链接。
+- **完整性校验**：任一录音的音频文件在对象存储中缺失，或 ZIP 内音频数与台账行数不一致，会**中止导出并说明原因**——避免交付"台账有记录、包里没文件"的残缺数据集。
+- 字段含义、示例与下游解析建议见 **`数据集导出说明.md`**。
+
+---
+
+## 七、常见问题
 
 - **端口 8000 被占用**：改脚本里的 `--port`，同时改 `asr-miniprogram/app.ts` 的 `baseUrl`。
 - **真机预览连不上后端**：真机不能用 `localhost`。需把 `app.ts` 的 `baseUrl` 改成你电脑的**局域网 HTTPS 域名**，并在小程序后台配置 request / uploadFile / downloadFile 合法域名。
@@ -143,7 +164,7 @@ python tools/verify_recording.py --dir ./samples \
 
 ---
 
-## 七、发布上线（需真实账号与资质）
+## 八、发布上线（需真实账号与资质）
 
 1. 注册小程序账号（mp.weixin.qq.com）→ 微信认证（企业 300 元/年）。
 2. 换真实 AppID（改 `project.config.json` 的 `appid`），`baseUrl` 改 HTTPS 域名。
@@ -153,7 +174,7 @@ python tools/verify_recording.py --dir ./samples \
 
 ---
 
-## 八、当前完成度
+## 九、当前完成度
 
 - ✅ 采集端全流程：登录 / 同意书（含撤回）/ 领文本 / 录音 / 试听 / 上传恢复 / `uploadId` 防重
 - ✅ 平台隐私授权弹窗（录音前拦截）+ 麦克风权限被拒降级
@@ -168,5 +189,8 @@ python tools/verify_recording.py --dir ./samples \
 - ✅ 退回原因回显：审核员填写的退回原因，采集员在「我的任务」卡片上直接看到，便于针对性重录
 - ✅ 录音版本递增：同一任务重录生成新版本（`version` 1→2…），历史版本保留
 - ✅ 真机录音验证工装：脚本 + dev 探测接口 + 端侧探针
-- ✅ 烟测脚本：`tools/smoke_roles.py`（15 项）、`tools/smoke_import.py`（17 项）、`tools/smoke_reviewer.py`（17 项）
+- ✅ 进度统计：采集端「我的进度」（已通过/总数、完成率进度条、待录/待审/退回）；管理台全局完成率 + 采集员排行 + 按任务包统计
+- ✅ 录音暂停/继续（`pause`/`resume`）+ 中断处理（来电、切后台 `onInterruptionBegin`/`onHide` 标记中断，禁止无确认直接提交，中断标记随上传进审核队列）
+- ✅ 导出数据集：`audio/` + `metadata.csv`（音频编号/文本/采集人/采集时间/时长/采样率/声道/参数版本/审核状态）+ `transcripts.txt`（编号与音频一一对应）+ `manifest.json`（含 MD5）；含 §6.1 数量一致性与音频缺失校验
+- ✅ 烟测脚本：`tools/smoke_roles.py`（15）、`smoke_import.py`（17）、`smoke_reviewer.py`（17）、`smoke_progress_export.py`（33）
 - ⏳ 待做：真机现场验证、生产密钥托管（Vault/KMS）、真实 ASR 辅助审核

@@ -8,13 +8,14 @@ import zipfile
 
 from fastapi import APIRouter, Depends, HTTPException, Request
 from fastapi.responses import StreamingResponse
-from sqlalchemy import select
+from sqlalchemy import func, select
 
 from .. import models
 from ..db import SessionLocal
 from ..deps import get_db, record_audit, require_admin, require_reviewer
-from ..responses import ok
+from ..responses import fail, ok
 from ..schemas import ReviewPayload
+from ..stats import summarize
 from ..storage import storage
 
 router = APIRouter()
@@ -24,6 +25,67 @@ EXPORT_ASYNC_THRESHOLD = 1000
 
 # 允许分配的角色
 ALLOWED_ROLES = {"collector", "reviewer", "admin"}
+
+
+@router.get("/admin/progress")
+async def global_progress(principal=Depends(require_reviewer), db=Depends(get_db)):
+    """全局采集进度（方案 §9.1）：总量 / 各状态 / 完成率 + 公共池 + 按采集员排行 + 按任务包统计。
+
+    完成率 = 已通过 / 总任务数（审核通过才计入完成）。
+    """
+    # 总览
+    rows = await db.execute(
+        select(models.TaskAssignment.status, func.count()).group_by(
+            models.TaskAssignment.status
+        )
+    )
+    overall = summarize({st: n for st, n in rows.all()})
+
+    # 公共池：未指派且未被领取
+    pool = await db.scalar(
+        select(func.count())
+        .select_from(models.TaskAssignment)
+        .where(
+            models.TaskAssignment.assignee.is_(None),
+            models.TaskAssignment.status == "pending",
+        )
+    )
+
+    # 按采集员
+    crows = await db.execute(
+        select(
+            models.TaskAssignment.assignee,
+            models.TaskAssignment.status,
+            func.count(),
+        )
+        .where(models.TaskAssignment.assignee.is_not(None))
+        .group_by(models.TaskAssignment.assignee, models.TaskAssignment.status)
+    )
+    per_user: dict[str, dict] = {}
+    for uid, st, n in crows.all():
+        per_user.setdefault(uid, {})[st] = n
+    collectors = [{"userId": uid, **summarize(c)} for uid, c in per_user.items()]
+    # 完成率高的排前面；同率则任务量大的排前面
+    collectors.sort(key=lambda x: (-x["completionRate"], -x["total"]))
+
+    # 按任务包
+    prows = await db.execute(
+        select(models.TaskAssignment.pkg_id, models.TaskAssignment.status, func.count())
+        .group_by(models.TaskAssignment.pkg_id, models.TaskAssignment.status)
+    )
+    per_pkg: dict[str, dict] = {}
+    for pid, st, n in prows.all():
+        per_pkg.setdefault(pid, {})[st] = n
+    names = dict(
+        (await db.execute(select(models.TaskPackage.pkg_id, models.TaskPackage.name))).all()
+    )
+    packages = [
+        {"pkgId": pid, "name": names.get(pid, pid), **summarize(c)}
+        for pid, c in per_pkg.items()
+    ]
+    packages.sort(key=lambda x: x["pkgId"])
+
+    return ok({**overall, "pool": pool, "collectors": collectors, "packages": packages})
 
 
 @router.get("/admin/audios")
@@ -99,121 +161,225 @@ async def review_audio(
     return ok({"status": rec.status})
 
 
-async def _build_export_zip(recs) -> io.BytesIO:
-    """构造 dataset.zip = audio/ + metadata.csv + manifest.json。"""
-    buf = io.BytesIO()
-    manifest = {"total": len(recs), "items": []}
-    csv_lines = io.StringIO()
-    writer = csv.writer(csv_lines)
-    writer.writerow(
-        [
-            "recordingId",
-            "assignmentId",
-            "version",
-            "sampleRate",
-            "channels",
-            "codec",
-            "duration",
-            "qualityFlags",
-            "status",
-        ]
+# metadata.csv 列定义（方案 §6.3：音频编号、文本、人员、时间、时长、采样率、声道、参数版本、审核状态）
+EXPORT_METADATA_COLUMNS = [
+    "recordingId",
+    "assignmentId",
+    "packageId",
+    "paramVersion",
+    "textId",
+    "text",
+    "collector",
+    "recordedAt",
+    "version",
+    "duration",
+    "sampleRate",
+    "channels",
+    "codec",
+    "qualityFlags",
+    "status",
+]
+
+
+async def _collect_export_rows(db) -> list[dict]:
+    """汇总「已通过」录音的完整导出信息：音频键 + 文本 + 采集人 + 参数版本。"""
+    rows = await db.execute(
+        select(
+            models.Recording,
+            models.TaskAssignment,
+            models.TextItem,
+            models.TaskPackage,
+        )
+        .join(
+            models.TaskAssignment,
+            models.TaskAssignment.assignment_id == models.Recording.assignment_id,
+        )
+        .outerjoin(
+            models.TextItem, models.TextItem.text_id == models.TaskAssignment.text_id
+        )
+        .outerjoin(
+            models.TaskPackage, models.TaskPackage.pkg_id == models.TaskAssignment.pkg_id
+        )
+        .where(models.Recording.status == "approved")
+        .order_by(models.Recording.id)
     )
+    out: list[dict] = []
+    for rec, asg, text, pkg in rows.all():
+        key = rec.wav_key or rec.raw_key
+        ext = "wav" if rec.wav_key else (key.rsplit(".", 1)[-1] if key else "bin")
+        out.append(
+            {
+                "recordingId": rec.recording_id,
+                "assignmentId": rec.assignment_id,
+                "packageId": asg.pkg_id if asg else "",
+                "paramVersion": pkg.param_version if pkg else None,
+                "textId": asg.text_id if asg else "",
+                "text": text.text if text else "",
+                "collector": (asg.assignee if asg else "") or "",
+                "recordedAt": rec.created_at.isoformat() if rec.created_at else "",
+                "version": rec.version,
+                "duration": rec.duration,
+                "sampleRate": rec.real_sample_rate,
+                "channels": rec.real_channels,
+                "codec": rec.real_codec,
+                "qualityFlags": list(rec.quality_flags or []),
+                "status": rec.status,
+                "key": key,
+                "file": f"audio/{rec.recording_id}.{ext}",
+            }
+        )
+    return out
+
+
+async def _build_export_zip(rows: list[dict]) -> io.BytesIO:
+    """构造 数据集.zip = audio/ + metadata.csv + transcripts.txt + manifest.json（方案 §6.3）。
+
+    完整性校验（§6.1）：任一已通过录音的音频文件读取失败即中止导出，
+    避免交付「台账有记录、ZIP 里没文件」的不完整数据集。
+    """
+    # 1) 先取音频；读不到 = 文件缺失，属 §6.1 的不一致，直接中止
+    payload: list[tuple[dict, bytes]] = []
+    missing: list[str] = []
+    for row in rows:
+        data = b""
+        if row["key"]:
+            try:
+                data = await storage.read(row["key"])
+            except Exception:
+                data = b""
+        if not data:
+            missing.append(row["recordingId"])
+        payload.append((row, data))
+    if missing:
+        raise ValueError(
+            f"导出中止：{len(missing)} 条已通过录音的音频文件缺失"
+            f"（如 {missing[:3]}），请检查对象存储后重试"
+        )
+
+    buf = io.BytesIO()
+    manifest = {
+        "total": len(rows),
+        "exportedAt": models.utcnow().isoformat(),
+        "items": [],
+    }
+    csv_buf = io.StringIO()
+    writer = csv.writer(csv_buf)
+    writer.writerow(EXPORT_METADATA_COLUMNS)
+    transcript_lines: list[str] = []
 
     with zipfile.ZipFile(buf, "w", zipfile.ZIP_DEFLATED) as z:
-        for r in recs:
-            key = r.wav_key or r.raw_key
-            data = b""
-            if key:
-                try:
-                    data = await storage.read(key)
-                except Exception:
-                    data = b""
-            ext = "wav" if r.wav_key else (key.rsplit(".", 1)[-1] if key else "bin")
-            fname = f"audio/{r.recording_id}.{ext}"
-            z.writestr(fname, data)
-            md5 = hashlib.md5(data).hexdigest() if data else ""
+        for row, data in payload:
+            z.writestr(row["file"], data)
             writer.writerow(
                 [
-                    r.recording_id,
-                    r.assignment_id,
-                    r.version,
-                    r.real_sample_rate,
-                    r.real_channels,
-                    r.real_codec,
-                    r.duration,
-                    ",".join(r.quality_flags or []),
-                    r.status,
+                    row["recordingId"],
+                    row["assignmentId"],
+                    row["packageId"],
+                    row["paramVersion"],
+                    row["textId"],
+                    row["text"],
+                    row["collector"],
+                    row["recordedAt"],
+                    row["version"],
+                    row["duration"],
+                    row["sampleRate"],
+                    row["channels"],
+                    row["codec"],
+                    ",".join(row["qualityFlags"]),
+                    row["status"],
                 ]
             )
+            # transcripts.txt：纯文本台账，每行一条，`音频编号<TAB>文本`，编号与音频一一对应
+            transcript_lines.append(f"{row['recordingId']}\t{row['text']}")
             manifest["items"].append(
-                {"recordingId": r.recording_id, "file": fname, "md5": md5}
+                {
+                    "recordingId": row["recordingId"],
+                    "file": row["file"],
+                    "md5": hashlib.md5(data).hexdigest(),
+                    "text": row["text"],
+                    "collector": row["collector"],
+                }
             )
-        z.writestr("metadata.csv", csv_lines.getvalue())
+        # metadata.csv / transcripts.txt 一律 UTF-8 无 BOM（供下游程序解析）
+        z.writestr("metadata.csv", csv_buf.getvalue())
+        z.writestr(
+            "transcripts.txt",
+            "\n".join(transcript_lines) + ("\n" if transcript_lines else ""),
+        )
         z.writestr("manifest.json", json.dumps(manifest, ensure_ascii=False, indent=2))
+
+    # 2) 数量一致性复核：ZIP 内音频条目数必须等于台账行数（§6.1）
+    with zipfile.ZipFile(buf) as zf:
+        n_audio = sum(1 for n in zf.namelist() if n.startswith("audio/"))
+    if n_audio != len(rows):
+        raise ValueError(
+            f"导出中止：ZIP 内音频文件数({n_audio})与台账记录数({len(rows)})不一致"
+        )
 
     buf.seek(0)
     return buf
 
 
-async def _run_export_job(job_id: str, recs) -> None:
+async def _run_export_job(job_id: str, rows: list[dict]) -> None:
     """后台打包任务：完成后写入对象存储并更新 ExportJob 记录（自带会话，独立于请求）。"""
-    from ..models import utcnow
-
     async with SessionLocal() as db:
         try:
-            buf = await _build_export_zip(recs)
+            buf = await _build_export_zip(rows)
             key = f"exports/{job_id}.zip"
             await storage.save(key, buf.getvalue())
             job = await db.get(models.ExportJob, job_id)
             job.status = "done"
             job.key = key
-            job.total = len(recs)
-            job.finished_at = utcnow()
+            job.total = len(rows)
+            job.finished_at = models.utcnow()
             await db.commit()
-        except Exception as e:  # 记入任务表，便于前端排查
+        except Exception as e:  # 含 §6.1 完整性校验失败：记入任务表，便于前端排查
             job = await db.get(models.ExportJob, job_id)
             if job:
                 job.status = "failed"
                 job.error = str(e)
-                job.finished_at = utcnow()
+                job.finished_at = models.utcnow()
                 await db.commit()
 
 
 @router.post("/admin/export")
 async def export_dataset(principal=Depends(require_reviewer), db=Depends(get_db)):
-    """导出已通过录音。
+    """导出已通过录音（方案 §6）。
 
     - 数量 ≤ 阈值：同步流式返回 zip。
     - 数量 > 阈值：异步打包，写入 ExportJob（持久化），返回 jobId 供前端轮询。
+    - 完整性校验失败（音频缺失 / 数量不一致）→ 中止导出并说明原因（§6.1）。
     """
-    rows = await db.execute(
-        select(models.Recording).where(models.Recording.status == "approved")
-    )
-    recs = rows.scalars().all()
+    rows = await _collect_export_rows(db)
 
-    if len(recs) > EXPORT_ASYNC_THRESHOLD:
+    if len(rows) > EXPORT_ASYNC_THRESHOLD:
         job_id = uuid.uuid4().hex
-        db.add(models.ExportJob(job_id=job_id, status="pending", total=len(recs)))
+        db.add(models.ExportJob(job_id=job_id, status="pending", total=len(rows)))
         await db.commit()
-        asyncio.create_task(_run_export_job(job_id, recs))
+        asyncio.create_task(_run_export_job(job_id, rows))
         record_audit(
             db,
             principal["uid"],
             principal["role"],
             "export_async_start",
             "dataset",
-            f"job={job_id};count={len(recs)}",
+            f"job={job_id};count={len(rows)}",
         )
         await db.commit()
         return ok(
             {
                 "async": True,
                 "jobId": job_id,
-                "total": len(recs),
+                "total": len(rows),
                 "status": "pending",
                 "pollUrl": f"/api/admin/export/{job_id}",
             }
         )
+
+    try:
+        buf = await _build_export_zip(rows)
+    except ValueError as e:  # §6.1 一致性校验未通过
+        return fail(str(e))
 
     record_audit(
         db,
@@ -221,10 +387,9 @@ async def export_dataset(principal=Depends(require_reviewer), db=Depends(get_db)
         principal["role"],
         "export",
         "dataset",
-        f"count={len(recs)}",
+        f"count={len(rows)}",
     )
     await db.commit()
-    buf = await _build_export_zip(recs)
     return StreamingResponse(
         buf,
         media_type="application/zip",

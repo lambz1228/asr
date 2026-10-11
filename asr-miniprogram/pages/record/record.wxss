@@ -14,10 +14,26 @@
   font-size: 26rpx;
   margin-bottom: 30rpx;
 }
+.status.warn {
+  color: #e64340;
+}
+.alert {
+  background: #fff3f3;
+  color: #8a3b39;
+  border-radius: 10rpx;
+  padding: 20rpx 24rpx;
+  font-size: 25rpx;
+  line-height: 1.5;
+  margin-bottom: 28rpx;
+}
 .ctrl {
   margin-bottom: 20rpx;
 }
 .ctrl.primary {
   background: #07c160;
+  color: #fff;
+}
+.ctrl.danger {
+  background: #e64340;
   color: #fff;
 }

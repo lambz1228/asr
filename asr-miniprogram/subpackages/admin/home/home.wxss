@@ -19,6 +19,102 @@
   color: #999;
 }
 
+/* 全局进度 */
+.progress-card {
+  background: #fff;
+  border-radius: 16rpx;
+  padding: 26rpx 24rpx;
+  margin-bottom: 20rpx;
+  box-shadow: 0 2rpx 10rpx rgba(0, 0, 0, 0.04);
+}
+.progress-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  margin-bottom: 16rpx;
+}
+.progress-title {
+  font-size: 28rpx;
+  font-weight: 600;
+  color: #222;
+}
+.progress-rate {
+  font-size: 24rpx;
+  color: #07c160;
+}
+.bar {
+  height: 14rpx;
+  background: #eee;
+  border-radius: 7rpx;
+  overflow: hidden;
+}
+.bar.slim {
+  height: 10rpx;
+}
+.bar-fill {
+  height: 100%;
+  background: #07c160;
+  border-radius: 7rpx;
+  transition: width 0.3s;
+}
+.progress-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 22rpx;
+  margin-top: 16rpx;
+  font-size: 23rpx;
+  color: #888;
+}
+.progress-meta .ok {
+  color: #07c160;
+}
+.progress-meta .bad {
+  color: #e64340;
+}
+
+/* 采集员排行 */
+.section-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  margin: 26rpx 8rpx 14rpx;
+}
+.section-head .section-title {
+  margin: 0;
+}
+.section-more {
+  font-size: 23rpx;
+  color: #1989fa;
+}
+.section-title.standalone {
+  margin: 26rpx 8rpx 14rpx;
+}
+.col-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  margin-bottom: 12rpx;
+}
+.col-id {
+  font-size: 27rpx;
+  font-weight: 600;
+  color: #222;
+}
+.col-rate {
+  font-size: 23rpx;
+  color: #07c160;
+}
+.col-meta {
+  display: flex;
+  gap: 24rpx;
+  margin-top: 12rpx;
+  font-size: 22rpx;
+  color: #888;
+}
+.col-meta .bad {
+  color: #e64340;
+}
+
 .stats {
   display: flex;
   background: #fff;

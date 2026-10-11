@@ -20,6 +20,14 @@ const STATUS_TEXT: Record<string, string> = {
   rejected: '已退回'
 }
 
+// 质量标记中文说明（方案 §5.2 + 端侧中断标记）
+const FLAG_TEXT: Record<string, string> = {
+  low_volume: '音量过低',
+  clipping: '削波失真',
+  too_much_silence: '静音过多',
+  recording_interrupted: '录音曾中断'
+}
+
 Page({
   data: {
     filter: 'uploaded',
@@ -27,7 +35,8 @@ Page({
     displayItems: [] as AudioItem[],
     loading: true,
     playingId: '' as string,
-    statusText: STATUS_TEXT
+    statusText: STATUS_TEXT,
+    flagText: FLAG_TEXT
   },
   audioCtx: null as any,
 

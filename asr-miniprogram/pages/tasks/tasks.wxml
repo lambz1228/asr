@@ -3,6 +3,21 @@
     进入管理台 ›
   </view>
 
+  <!-- 我的进度 -->
+  <view wx:if="{{progress && progress.total}}" class="progress-card">
+    <view class="progress-head">
+      <text class="progress-title">我的进度</text>
+      <text class="progress-rate">{{progress.approved}}/{{progress.total}} 已通过 · {{percent}}%</text>
+    </view>
+    <view class="bar"><view class="bar-fill" style="width:{{percent}}%"></view></view>
+    <view class="progress-meta">
+      <text>待录 {{progress.pending}}</text>
+      <text>待审 {{progress.uploaded}}</text>
+      <text class="ok">已通过 {{progress.approved}}</text>
+      <text class="{{progress.rejected ? 'bad' : ''}}">已退回 {{progress.rejected}}</text>
+    </view>
+  </view>
+
   <view class="section-title">我的任务</view>
   <view wx:if="{{loading}}" class="tip">加载中...</view>
   <view

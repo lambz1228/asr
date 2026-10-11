@@ -7,6 +7,8 @@ export interface UploadMeta {
   status: 'pending_upload' | 'uploaded' | 'upload_failed'
   retries: number
   uploadId: string
+  /** 录音过程是否被来电/切后台打断，随上传带给服务端并在重试时保留 */
+  interrupted: boolean
 }
 
 const META_KEY = 'pending_uploads'
@@ -31,7 +33,8 @@ export async function saveAndUpload(
   taskId: string,
   textId: string,
   tempFilePath: string,
-  version: number
+  version: number,
+  interrupted = false
 ): Promise<void> {
   const savedFilePath = wx.getFileSystemManager().saveFileSync(tempFilePath)
   const uploadId = genUploadId(taskId, version)
@@ -41,7 +44,8 @@ export async function saveAndUpload(
     savedFilePath,
     status: 'pending_upload',
     retries: 0,
-    uploadId
+    uploadId,
+    interrupted
   }
   const list = readMeta()
   list.push(meta)
@@ -59,7 +63,11 @@ function doUpload(meta: UploadMeta): Promise<void> {
       filePath: meta.savedFilePath,
       name: 'file',
       header: token ? { Authorization: 'Bearer ' + token } : {},
-      formData: { textId: meta.textId, uploadId: meta.uploadId },
+      formData: {
+        textId: meta.textId,
+        uploadId: meta.uploadId,
+        interrupted: meta.interrupted ? '1' : '0'
+      },
       success: (res: any) => {
         // wx.uploadFile 的 success 包含 4xx/5xx（如 409 未签同意书），需解析业务结果
         let body: any = {}

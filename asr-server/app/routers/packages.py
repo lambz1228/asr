@@ -195,6 +195,7 @@ async def list_packages(principal=Depends(require_admin), db=Depends(get_db)):
             "pkgId": p.pkg_id,
             "name": p.name,
             "params": p.params,
+            "paramVersion": p.param_version,
             "createdBy": p.created_by,
             "texts": n_texts,
             "assignments": n_asg,

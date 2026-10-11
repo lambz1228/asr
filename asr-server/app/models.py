@@ -50,6 +50,8 @@ class TaskPackage(Base):
     pkg_id: Mapped[str] = mapped_column(String(32), unique=True, index=True)
     name: Mapped[str] = mapped_column(String(128))
     params: Mapped[dict] = mapped_column(JSON)  # {sample_rate, channels, format, ...}
+    # 参数版本：任务包创建时锁定，改动采集参数应递增，已采集数据不受影响（方案 §10.2）
+    param_version: Mapped[int] = mapped_column(default=1)
     created_by: Mapped[str] = mapped_column(String(32))
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
 

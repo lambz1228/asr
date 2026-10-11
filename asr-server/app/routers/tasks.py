@@ -1,11 +1,24 @@
 from fastapi import APIRouter, Depends
-from sqlalchemy import select
+from sqlalchemy import func, select
 
 from .. import models
 from ..deps import get_current_user, get_db, record_audit
 from ..responses import ok
+from ..stats import summarize
 
 router = APIRouter()
+
+
+@router.get("/progress")
+async def my_progress(user=Depends(get_current_user), db=Depends(get_db)):
+    """采集员个人进度（方案 §9.1）：总任务 / 各状态计数 / 完成率。"""
+    rows = await db.execute(
+        select(models.TaskAssignment.status, func.count())
+        .where(models.TaskAssignment.assignee == user["uid"])
+        .group_by(models.TaskAssignment.status)
+    )
+    counts = {st: n for st, n in rows.all()}
+    return ok(summarize(counts))
 
 
 @router.get("/tasks")

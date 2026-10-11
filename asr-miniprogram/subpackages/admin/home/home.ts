@@ -11,13 +11,28 @@ interface PkgItem {
   createdBy: string
 }
 
+// 进度口径与服务端 app/stats.py 一致：完成率 = 已通过 / 总任务数
+interface Progress {
+  total: number
+  pending: number
+  uploaded: number
+  approved: number
+  rejected: number
+  recorded: number
+  completionRate: number
+}
+interface CollectorRow extends Progress {
+  userId: string
+  percent: number
+}
+
 const ROLE_TEXT: Record<string, string> = {
   admin: '管理员',
   reviewer: '审核员',
   collector: '采集员'
 }
 
-// 管理台首页：管理员登录后的落地页，聚合「导入任务」「录音审核」与任务包概览
+// 管理台首页：管理员登录后的落地页，聚合全局进度、导入任务与录音审核
 Page({
   data: {
     role: '',
@@ -26,8 +41,12 @@ Page({
     isAdmin: false, // 仅 admin 可导入任务（reviewer 只有审核权限）
     loading: true,
     pkgs: [] as PkgItem[],
-    totalAudios: 0,
-    pendingAudios: 0
+    overall: null as Progress | null,
+    percent: 0,
+    pool: 0,
+    topCollectors: [] as CollectorRow[],
+    allCollectors: [] as CollectorRow[],
+    showAll: false
   },
   onShow() {
     this.load()
@@ -39,29 +58,48 @@ Page({
     this.setData({ loading: true })
     try {
       const me = await getMe()
+      const isAdmin = me.role === 'admin'
       this.setData({
         role: me.role,
         roleText: ROLE_TEXT[me.role] || me.role,
         userId: me.userId,
-        isAdmin: me.role === 'admin'
+        isAdmin
       })
-      const pkgRes = await request<{ list: PkgItem[] }>({ url: '/admin/packages' })
-      this.setData({ pkgs: pkgRes.list || [] })
-      // 审核统计（reviewer 亦可读），失败不阻塞首页
+
+      // 全局采集进度（admin / reviewer 均可读），失败不阻塞首页
       try {
-        const audios = await request<{ list: any[] }>({ url: '/admin/audios' })
-        const list = audios.list || []
+        const p = await request<any>({ url: '/admin/progress' })
+        const rows: CollectorRow[] = (p.collectors || []).map((c: any) => ({
+          ...c,
+          percent: Math.round((c.completionRate || 0) * 100)
+        }))
         this.setData({
-          totalAudios: list.length,
-          pendingAudios: list.filter((a) => a.status === 'uploaded').length
+          overall: p,
+          percent: Math.round((p.completionRate || 0) * 100),
+          pool: p.pool || 0,
+          allCollectors: rows,
+          topCollectors: rows.slice(0, 5)
         })
       } catch {}
+
+      // 任务包列表仅 admin 可读；reviewer 请求会 403，这里直接跳过
+      if (isAdmin) {
+        try {
+          const pkgRes = await request<{ list: PkgItem[] }>({ url: '/admin/packages' })
+          this.setData({ pkgs: pkgRes.list || [] })
+        } catch {}
+      } else {
+        this.setData({ pkgs: [] })
+      }
     } catch (e: any) {
       wx.showToast({ title: e.message || '加载失败', icon: 'none' })
     } finally {
       this.setData({ loading: false })
       wx.stopPullDownRefresh()
     }
+  },
+  onToggleCollectors() {
+    this.setData({ showAll: !this.data.showAll })
   },
   onImport() {
     wx.navigateTo({ url: '/subpackages/admin/import/import' })

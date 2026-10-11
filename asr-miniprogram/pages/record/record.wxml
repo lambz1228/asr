@@ -1,9 +1,25 @@
 <view class="container">
   <view class="text-box">{{text}}</view>
-  <view class="status">{{statusText}}</view>
+  <view class="status {{interrupted ? 'warn' : ''}}">{{statusText}}</view>
 
-  <button class="ctrl" bindtap="onStart">{{recording ? '停止' : (recorded ? '重录' : '开始录音')}}</button>
-  <button class="ctrl" wx:if="{{recorded}}" bindtap="onPlay">{{playing ? '播放中...' : '试听'}}</button>
-  <button class="ctrl" wx:if="{{recorded}}" bindtap="onRerecord">清除重录</button>
-  <button class="ctrl primary" wx:if="{{recorded}}" bindtap="onSubmit">提交上传</button>
+  <view wx:if="{{interrupted}}" class="alert">
+    该录音在录制过程中被打断（来电 / 切后台），内容可能不完整，建议「清除重录」
+  </view>
+
+  <!-- 未录音 / 录音中 -->
+  <block wx:if="{{!recorded}}">
+    <button class="ctrl {{recording ? 'danger' : 'primary'}}" bindtap="onToggleRecord">
+      {{recording ? '停止录音' : '开始录音'}}
+    </button>
+    <button wx:if="{{recording}}" class="ctrl" bindtap="onTogglePause">
+      {{paused ? '继续录音' : '暂停'}}
+    </button>
+  </block>
+
+  <!-- 已录完 -->
+  <block wx:else>
+    <button class="ctrl" bindtap="onPlay">{{playing ? '停止播放' : '试听'}}</button>
+    <button class="ctrl" bindtap="onRerecord">清除重录</button>
+    <button class="ctrl primary" bindtap="onSubmit">提交上传</button>
+  </block>
 </view>

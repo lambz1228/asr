@@ -24,7 +24,7 @@
         <text>时长 {{item.duration ? item.duration + 's' : '—'}}</text>
       </view>
       <view wx:if="{{item.qualityFlags.length}}" class="flags">
-        <text wx:for="{{item.qualityFlags}}" wx:for-item="f" wx:key="*this" class="flag">{{f}}</text>
+        <text wx:for="{{item.qualityFlags}}" wx:for-item="f" wx:key="*this" class="flag">{{flagText[f] || f}}</text>
       </view>
       <view class="actions">
         <button class="play-btn" size="mini" bindtap="onPlay" data-id="{{item.recordingId}}">
