@@ -1,5 +1,5 @@
 // 自定义 tabBar：管理员 / 采集员共用同一套底部导航
-// 动效：活动项高亮块横向滑动（left 过渡）+ 图标弹跳 + 轻震动反馈
+// 动效：活动项高亮块横向滑动（left 过渡）+ 图标弹跳（不做震动反馈）
 // 说明：组件自己从当前页面路由解析所处下标，页面无需手动同步 selected，
 //      这样即使某个 tab 页被缓存复用，高亮状态也不会错位。
 const LIST = [
@@ -97,8 +97,7 @@ Component({
       const i = Number(e.currentTarget.dataset.i)
       const item = LIST[i]
       if (!item) return
-      wx.vibrateShort({ type: 'light', fail: () => {} })
-      // 已在当前 tab：只给震动反馈，不重复跳转
+      // 已在当前 tab：不重复跳转
       if (this.routeIndex() === i) {
         this.settle(i)
         return
