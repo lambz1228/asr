@@ -126,6 +126,41 @@ if (app.tabBar && app.tabBar.custom) {
   ;['activeIcon', 'icon'].forEach((k) => {
     cbWxml.includes(`item.${k}`) ? ok(`custom-tab-bar 使用 ${k}`) : warn(`custom-tab-bar 未使用 ${k}`)
   })
+
+  // ---- tabBar 切页时序护栏（防「切界面时导航 UI 跟不上」回归）----
+  // 自定义 tabBar 是每个页面各一个实例，切 tab 时目标页**新建**实例、老实例随页面销毁。
+  // 所以新实例必须首个渲染帧就落在正确位置；一旦它「先落到上一次所在的 tab、再延时滑过来」，
+  // 就会出现「页面已切好、高亮块还在路上」的滞后感（实测约 430ms）。
+  const cbJs = fs.readFileSync(path.join(ROOT, 'custom-tab-bar', 'index.js'), 'utf8')
+  const cbWxss = fs.readFileSync(path.join(ROOT, 'custom-tab-bar', 'index.wxss'), 'utf8')
+
+  // 1) 不得再依赖「上一次所在的 tab」这种跨实例共享状态来定位
+  cbJs.includes('tabIndex')
+    ? fail('custom-tab-bar 仍在使用 globalData.tabIndex 回溯上一次所在的 tab（会让新实例首帧落在错位置）')
+    : ok('custom-tab-bar 不依赖上一次所在的 tab 定位')
+
+  // 2) 不得用延时回调「补位」高亮块
+  ;/setTimeout\s*\(/.test(cbJs)
+    ? fail('custom-tab-bar 存在 setTimeout 补位（会把高亮块拖到下一页面上再滑）')
+    : ok('custom-tab-bar 无延时补位')
+
+  // 3) tab 顺序必须与 app.json 的 tabBar.list 完全一致（不一致会导致高亮/跳转错位）
+  const cbPaths = [...cbJs.matchAll(/pagePath:\s*'([^']+)'/g)].map((m) => m[1])
+  const appPaths = (app.tabBar.list || []).map((i) => '/' + i.pagePath)
+  cbPaths.join(',') === appPaths.join(',')
+    ? ok(`custom-tab-bar tab 顺序与 app.json 一致（${cbPaths.length} 项）`)
+    : fail(`custom-tab-bar tab 顺序与 app.json 不一致：组件 ${cbPaths.join(',')} / app.json ${appPaths.join(',')}`)
+
+  // 4) 首帧必须禁过渡：anim 默认 false + wxml 绑 no-anim + wxss 关掉 transition
+  ;/anim:\s*false/.test(cbJs)
+    ? ok('custom-tab-bar anim 默认 false（首帧不播过渡）')
+    : fail('custom-tab-bar 的 anim 默认值不是 false，首帧可能滑过来')
+  cbWxml.includes('no-anim')
+    ? ok('custom-tab-bar wxml 绑定 no-anim')
+    : fail('custom-tab-bar wxml 未绑定 no-anim（首帧无法禁过渡）')
+  ;/\.blob-track\.no-anim\s*\{[^}]*transition:\s*none/.test(cbWxss)
+    ? ok('custom-tab-bar wxss 为 .no-anim 关闭 transition')
+    : fail('custom-tab-bar wxss 未为 .no-anim 关闭 transition')
 }
 
 console.log('== 4. 源码内页面跳转路径 ==')

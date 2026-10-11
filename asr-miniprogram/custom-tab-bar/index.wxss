@@ -29,7 +29,16 @@
   pointer-events: none;
   /* 提升为合成层：过渡期间不参与重排 / 重绘 */
   will-change: transform;
-  transition: transform 0.4s cubic-bezier(0.22, 0.9, 0.32, 1);
+  /* 过渡只在「点击离场」时被用到（anim=true），那一段滑动很快会被页面切换打断，
+     所以时长偏短，让指向感利落一点；到位由目标页首帧保证，不靠这段动画。 */
+  transition: transform 0.28s cubic-bezier(0.22, 0.9, 0.32, 1);
+}
+
+/* 瞬移模式（首帧 / 页面重新显示时纠正位置）：
+   禁掉过渡，高亮块「一帧到位」。这是「导航跟不上」的关键 ——
+   一旦这里带着过渡，就会出现「页面已切换、高亮块还在滑」的滞后感。 */
+.blob-track.no-anim {
+  transition: none;
 }
 
 /* 高亮块：固定在轨道中心 */
@@ -77,7 +86,10 @@
   transition: color 0.28s ease;
 }
 
-/* 选中态：图标弹跳放大 + 文案变蓝加粗 */
+/* 选中态：图标弹跳放大 + 文案变蓝加粗。
+   animation-fill-mode 用 backwards：结束后回到静态 transform。
+   所以 100% 的关键帧必须与 .item.on .ico-wrap 的静态值一致（都是 scale(1.08)），
+   否则动画收尾会从 1.06 跳到 1.08 —— 切页最后那一下的轻微抖动就是这么来的。 */
 .item.on .ico-wrap {
   transform: scale(1.08);
   animation: tabPop 0.42s cubic-bezier(0.22, 0.9, 0.32, 1) backwards;
@@ -95,6 +107,6 @@
     transform: scale(1.18) translateY(-4rpx);
   }
   100% {
-    transform: scale(1.06) translateY(0);
+    transform: scale(1.08) translateY(0);
   }
 }
