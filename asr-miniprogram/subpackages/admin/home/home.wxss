@@ -18,6 +18,11 @@
   font-size: 24rpx;
   color: #999;
 }
+.hero-enter {
+  margin-top: 12rpx;
+  font-size: 24rpx;
+  color: #1a8cff;
+}
 
 /* 全局进度 */
 .progress-card {

@@ -1,0 +1,55 @@
+<view class="page">
+  <!-- 身份卡片 -->
+  <view class="me-card">
+    <view class="avatar">{{initial || '?'}}</view>
+    <view class="me-main">
+      <view class="me-name">{{userId || '未登录'}}</view>
+      <view class="me-role">{{roleText || '—'}}</view>
+    </view>
+    <view class="me-tag">{{envText}}</view>
+  </view>
+
+  <!-- 我的进度（采集员） -->
+  <view wx:if="{{isCollector && progress && progress.total}}" class="progress-card">
+    <view class="progress-head">
+      <text class="progress-title">我的进度</text>
+      <text class="progress-rate">{{progress.approved}}/{{progress.total}} · {{percent}}%</text>
+    </view>
+    <view class="bar"><view class="bar-fill" style="width:{{percent}}%"></view></view>
+    <view class="progress-meta">
+      <text>待录 {{progress.pending}}</text>
+      <text>待审 {{progress.uploaded}}</text>
+      <text class="ok">已通过 {{progress.approved}}</text>
+      <text class="{{progress.rejected ? 'bad' : ''}}">已退回 {{progress.rejected}}</text>
+    </view>
+  </view>
+
+  <!-- 功能入口 -->
+  <view class="list">
+    <view wx:if="{{isCollector}}" class="item" bindtap="onGoTasks">
+      <text class="item-label">我的任务</text>
+      <text class="item-arrow">›</text>
+    </view>
+    <view wx:if="{{isManager}}" class="item" bindtap="onGoConsole">
+      <text class="item-label">管理台</text>
+      <text class="item-arrow">›</text>
+    </view>
+    <view wx:if="{{isCollector}}" class="item" bindtap="onGoConsent">
+      <text class="item-label">语音信息同意书</text>
+      <text class="item-desc">查看 / 撤回已签署的单独同意</text>
+      <text class="item-arrow">›</text>
+    </view>
+    <view class="item" bindtap="onPrivacy">
+      <text class="item-label">隐私保护指引</text>
+      <text class="item-arrow">›</text>
+    </view>
+    <view wx:if="{{canSwitch}}" class="item" bindtap="onSwitchRole">
+      <text class="item-label">切换身份</text>
+      <text class="item-desc">当前：{{roleText}}（仅开发版）</text>
+      <text class="item-arrow">›</text>
+    </view>
+  </view>
+
+  <button class="logout" bindtap="onLogout">退出登录</button>
+  <view class="version">版本 {{version}} · {{envText}}</view>
+</view>

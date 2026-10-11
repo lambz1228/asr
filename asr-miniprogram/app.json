@@ -3,7 +3,8 @@
     "pages/login/login",
     "pages/consent/consent",
     "pages/tasks/tasks",
-    "pages/record/record"
+    "pages/record/record",
+    "pages/profile/profile"
   ],
   "subPackages": [
     {

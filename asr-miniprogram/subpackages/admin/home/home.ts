@@ -110,6 +110,9 @@ Page({
   onAudit() {
     wx.navigateTo({ url: '/subpackages/admin/audit/audit' })
   },
+  onProfile() {
+    wx.navigateTo({ url: '/pages/profile/profile' })
+  },
   onLogout() {
     wx.showModal({
       title: '退出登录',

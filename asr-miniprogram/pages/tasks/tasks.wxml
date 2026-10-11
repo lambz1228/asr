@@ -1,4 +1,14 @@
 <view class="container">
+  <!-- 个人中心入口 -->
+  <view class="me-row" bindtap="onProfile">
+    <view class="me-avatar">{{meInitial || '?'}}</view>
+    <view class="me-main">
+      <view class="me-name">{{meUserId || '未登录'}}</view>
+      <view class="me-role">{{meRoleText || '—'}}</view>
+    </view>
+    <view class="me-enter">个人中心 ›</view>
+  </view>
+
   <view wx:if="{{canManage}}" class="review-entry" bindtap="onEnterConsole">
     进入管理台 ›
   </view>

@@ -29,6 +29,12 @@ const STATUS_TEXT: Record<string, string> = {
   rejected: '已退回'
 }
 
+const ROLE_TEXT: Record<string, string> = {
+  admin: '管理员',
+  reviewer: '审核员',
+  collector: '采集员'
+}
+
 // 采集页：普通用户登录后的主界面
 // 「我的任务」来自管理员导入时直接分配给本人；「公共池」为未分配任务，可自行领取
 Page({
@@ -40,7 +46,11 @@ Page({
     statusText: STATUS_TEXT,
     claiming: '' as string,
     progress: null as Progress | null,
-    percent: 0
+    percent: 0,
+    // 顶部「个人中心」入口所需的身份信息
+    meUserId: '',
+    meRoleText: '',
+    meInitial: ''
   },
   onShow() {
     this.refresh()
@@ -83,7 +93,12 @@ Page({
     try {
       const me = await getMe()
       const canManage = me.role === 'admin' || me.role === 'reviewer'
-      this.setData({ canManage })
+      this.setData({
+        canManage,
+        meUserId: me.userId,
+        meRoleText: ROLE_TEXT[me.role] || me.role,
+        meInitial: (me.userId || '?').slice(0, 1).toUpperCase()
+      })
     } catch {
       this.setData({ canManage: false })
     }
@@ -121,5 +136,8 @@ Page({
   },
   onEnterConsole() {
     wx.navigateTo({ url: '/subpackages/admin/home/home' })
+  },
+  onProfile() {
+    wx.navigateTo({ url: '/pages/profile/profile' })
   }
 })
