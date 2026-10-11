@@ -1,0 +1,59 @@
+<view class="page">
+  <view class="topbar">
+    <view class="topbar-title">审计日志 · 共 {{total}} 条</view>
+    <button class="clean-btn" size="mini" loading="{{cleaning}}" bindtap="onCleanup">清理过期导出</button>
+  </view>
+
+  <!-- 操作类型筛选 -->
+  <scroll-view class="tabs" scroll-x>
+    <view class="tab {{action === '' ? 'on' : ''}}" data-a="" bindtap="onFilter">全部</view>
+    <view
+      wx:for="{{actions}}"
+      wx:key="*this"
+      class="tab {{action === item ? 'on' : ''}}"
+      data-a="{{item}}"
+      bindtap="onFilter"
+    >{{ACTION_TEXT[item] || item}}</view>
+  </scroll-view>
+
+  <!-- 导出任务留存情况 -->
+  <view class="jobs-toggle" bindtap="onToggleJobs">
+    导出包留存 {{ttlDays}} 天 · 最近导出 {{jobs.length}} 个 {{showJobs ? '（点击收起）' : '（点击展开）'}}
+  </view>
+  <block wx:if="{{showJobs}}">
+    <view wx:if="{{jobs.length === 0}}" class="tip small">暂无导出记录</view>
+    <view wx:for="{{jobs}}" wx:key="jobId" class="job">
+      <view class="job-line">
+        <text class="job-id">{{item.jobId}}</text>
+        <text class="job-status {{item.status}}">{{item.statusText}}</text>
+      </view>
+      <view class="job-meta">
+        <text>{{item.total}} 条</text>
+        <text>{{item.timeText}}</text>
+        <text wx:if="{{item.expiresText}}">到期 {{item.expiresText}}</text>
+        <text wx:if="{{item.error}}" class="bad">{{item.error}}</text>
+      </view>
+    </view>
+  </block>
+
+  <view wx:if="{{loading}}" class="tip">加载中...</view>
+  <block wx:else>
+    <view wx:if="{{items.length === 0}}" class="tip">暂无操作记录</view>
+    <view wx:for="{{items}}" wx:key="id" class="card">
+      <view class="card-head">
+        <text class="action">{{item.actionText}}</text>
+        <text class="time">{{item.timeText}}</text>
+      </view>
+      <view class="who">
+        <text class="operator">{{item.operatorId}}</text>
+        <text class="role">{{item.roleText}}</text>
+      </view>
+      <view class="target">对象 {{item.targetType}} · {{item.targetId}}</view>
+      <view wx:if="{{item.detailText}}" class="detail">{{item.detailText}}</view>
+    </view>
+    <view wx:if="{{hasMore}}" class="more" bindtap="onLoadMore">
+      {{loadingMore ? '加载中...' : '加载更多'}}
+    </view>
+    <view wx:elif="{{items.length}}" class="more done">已到末尾</view>
+  </block>
+</view>

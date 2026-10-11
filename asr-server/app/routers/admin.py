@@ -5,12 +5,15 @@ import io
 import json
 import uuid
 import zipfile
+from datetime import timedelta
 
-from fastapi import APIRouter, Depends, HTTPException, Request
+from fastapi import APIRouter, Depends, HTTPException, Query, Request
 from fastapi.responses import StreamingResponse
 from sqlalchemy import func, select
 
 from .. import models
+from ..cleanup import purge_expired_exports
+from ..config import settings
 from ..db import SessionLocal
 from ..deps import get_db, record_audit, require_admin, require_reviewer
 from ..responses import fail, ok
@@ -86,6 +89,71 @@ async def global_progress(principal=Depends(require_reviewer), db=Depends(get_db
     packages.sort(key=lambda x: x["pkgId"])
 
     return ok({**overall, "pool": pool, "collectors": collectors, "packages": packages})
+
+
+@router.get("/admin/audit-logs")
+async def list_audit_logs(
+    action: str = "",
+    operator: str = "",
+    target_type: str = Query("", alias="targetType"),
+    limit: int = Query(50, ge=1, le=200),
+    offset: int = Query(0, ge=0),
+    principal=Depends(require_admin),
+    db=Depends(get_db),
+):
+    """审计日志查询（方案 §9.1）：谁在什么时候对什么做了什么。
+
+    此前 AuditLog 只写不查，管理员看不到操作记录。现支持按操作类型 / 操作人 /
+    对象类型过滤 + 分页。含角色调整等敏感记录，故限管理员。
+    """
+    conds = []
+    if action:
+        conds.append(models.AuditLog.action == action)
+    if operator:
+        conds.append(models.AuditLog.operator_id == operator)
+    if target_type:
+        conds.append(models.AuditLog.target_type == target_type)
+
+    total = await db.scalar(select(func.count()).select_from(models.AuditLog).where(*conds))
+    rows = await db.execute(
+        select(models.AuditLog)
+        .where(*conds)
+        .order_by(models.AuditLog.id.desc())
+        .limit(limit)
+        .offset(offset)
+    )
+    items = [
+        {
+            "id": a.id,
+            "operatorId": a.operator_id,
+            "operatorRole": a.operator_role,
+            "action": a.action,
+            "targetType": a.target_type,
+            "targetId": a.target_id,
+            "detail": a.detail or {},
+            "ip": a.ip or "",
+            "createdAt": a.created_at.isoformat() if a.created_at else "",
+        }
+        for a in rows.scalars()
+    ]
+    # 供前端渲染筛选项：全表出现过的操作类型（不受当前过滤影响）
+    actions = [
+        x
+        for (x,) in (
+            await db.execute(
+                select(models.AuditLog.action).distinct().order_by(models.AuditLog.action)
+            )
+        ).all()
+    ]
+    return ok(
+        {
+            "list": items,
+            "total": total or 0,
+            "limit": limit,
+            "offset": offset,
+            "actions": actions,
+        }
+    )
 
 
 @router.get("/admin/audios")
@@ -333,6 +401,11 @@ async def _run_export_job(job_id: str, rows: list[dict]) -> None:
             job.total = len(rows)
             job.finished_at = models.utcnow()
             await db.commit()
+            # 顺带清理超期导出包（方案 §6.2），失败不影响本次导出
+            try:
+                await purge_expired_exports(db)
+            except Exception:
+                pass
         except Exception as e:  # 含 §6.1 完整性校验失败：记入任务表，便于前端排查
             job = await db.get(models.ExportJob, job_id)
             if job:
@@ -395,6 +468,58 @@ async def export_dataset(principal=Depends(require_reviewer), db=Depends(get_db)
         media_type="application/zip",
         headers={"Content-Disposition": "attachment; filename=dataset.zip"},
     )
+
+
+@router.get("/admin/export/jobs")
+async def list_export_jobs(
+    limit: int = Query(20, ge=1, le=100),
+    principal=Depends(require_reviewer),
+    db=Depends(get_db),
+):
+    """导出任务列表（含留存到期时间），供管理端查看历史导出与清理结果。"""
+    rows = await db.execute(
+        select(models.ExportJob).order_by(models.ExportJob.created_at.desc()).limit(limit)
+    )
+    ttl = settings.export_ttl_days
+    items = []
+    for j in rows.scalars():
+        expires_at = ""
+        if j.status == "done" and j.finished_at and ttl > 0:
+            expires_at = (j.finished_at + timedelta(days=ttl)).isoformat()
+        items.append(
+            {
+                "jobId": j.job_id,
+                "status": j.status,
+                "total": j.total,
+                "error": j.error or "",
+                "createdAt": j.created_at.isoformat() if j.created_at else "",
+                "finishedAt": j.finished_at.isoformat() if j.finished_at else "",
+                "expiresAt": expires_at,
+            }
+        )
+    return ok({"list": items, "ttlDays": ttl})
+
+
+@router.post("/admin/export/cleanup")
+async def cleanup_exports(principal=Depends(require_admin), db=Depends(get_db)):
+    """手动清理超期导出文件（方案 §6.2）。服务启动与每次异步导出后也会自动执行。"""
+    stats = await purge_expired_exports(db)
+    record_audit(
+        db,
+        principal["uid"],
+        principal["role"],
+        "export_cleanup",
+        "dataset",
+        "exports",
+        {
+            "ttlDays": stats["ttlDays"],
+            "expiredJobs": stats["expiredJobs"],
+            "deletedFiles": stats["deletedFiles"],
+            "orphans": stats["orphans"],
+        },
+    )
+    await db.commit()
+    return ok(stats)
 
 
 @router.get("/admin/export/{job_id}")

@@ -166,6 +166,9 @@
 .entry-ico.review {
   background: #07c160;
 }
+.entry-ico.audit {
+  background: #8a6d3b;
+}
 .entry-body {
   flex: 1;
   min-width: 0;

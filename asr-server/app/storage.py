@@ -45,6 +45,37 @@ class LocalStorage:
     async def url(self, key: str) -> str:
         return f"/files/{key}"
 
+    async def delete(self, key: str) -> bool:
+        """删除对象；不存在返回 False（不抛异常，便于幂等清理）。"""
+        path = self._path(key)
+
+        def _rm() -> bool:
+            try:
+                os.remove(path)
+                return True
+            except FileNotFoundError:
+                return False
+
+        return await asyncio.to_thread(_rm)
+
+    async def list(self, prefix: str) -> list[tuple[str, float]]:
+        """列举 prefix 下的对象，返回 [(key, 修改时间戳秒)]，供过期清理判断。"""
+        base = os.path.abspath(self.root)
+
+        def _walk() -> list[tuple[str, float]]:
+            out: list[tuple[str, float]] = []
+            if not os.path.isdir(base):
+                return out
+            for dirpath, _dirs, files in os.walk(base):
+                for fn in files:
+                    full = os.path.join(dirpath, fn)
+                    rel = os.path.relpath(full, base).replace(os.sep, "/")
+                    if rel.startswith(prefix):
+                        out.append((rel, os.path.getmtime(full)))
+            return out
+
+        return await asyncio.to_thread(_walk)
+
 
 class S3Storage:
     def __init__(self):
@@ -74,6 +105,21 @@ class S3Storage:
             return await client.generate_presigned_url(
                 "get_object", Params={"Bucket": self.bucket, "Key": key}, ExpiresIn=3600
             )
+
+    async def delete(self, key: str) -> bool:
+        async with self.session.client("s3", **self._client_kwargs) as client:
+            await client.delete_object(Bucket=self.bucket, Key=key)
+        return True
+
+    async def list(self, prefix: str) -> list[tuple[str, float]]:
+        out: list[tuple[str, float]] = []
+        async with self.session.client("s3", **self._client_kwargs) as client:
+            paginator = client.get_paginator("list_objects_v2")
+            async for page in paginator.paginate(Bucket=self.bucket, Prefix=prefix):
+                for obj in page.get("Contents", []) or []:
+                    ts = obj["LastModified"].timestamp() if obj.get("LastModified") else 0.0
+                    out.append((obj["Key"], ts))
+        return out
 
 
 def get_storage():

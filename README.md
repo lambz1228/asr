@@ -89,7 +89,8 @@ E:/asr/
     ├── smoke_roles.py                   # 角色通路烟测（15 项）
     ├── smoke_import.py                  # Excel 导入与统一下发烟测（17 项）
     ├── smoke_reviewer.py                # 审核员权限/版本递增/退回原因烟测（17 项）
-    └── smoke_progress_export.py          # 进度统计/导出完整性/录音中断烟测（33 项）
+    ├── smoke_progress_export.py         # 进度统计/导出完整性/录音中断烟测（33 项）
+    └── smoke_audit_cleanup.py           # 审计日志查询/导出过期清理烟测（49 项）
 ```
 
 ---
@@ -151,6 +152,7 @@ dataset.zip
 
 - 单次 ≤ 1000 条：同步直接返回 ZIP；超过则**异步打包**，前台轮询进度并拿到签名下载链接。
 - **完整性校验**：任一录音的音频文件在对象存储中缺失，或 ZIP 内音频数与台账行数不一致，会**中止导出并说明原因**——避免交付"台账有记录、包里没文件"的残缺数据集。
+- **留存与清理**：异步导出的 ZIP 会留在对象存储里，默认**保留 7 天**（`.env` 的 `EXPORT_TTL_DAYS`，置 0 关闭）。到期自动删除并置任务状态 `expired`，触发点为「服务启动 / 异步导出完成 / 管理员手动清理」，管理台「审计日志」页底部有一键清理，也会列出各导出包的到期时间。
 - 字段含义、示例与下游解析建议见 **`数据集导出说明.md`**。
 
 ---
@@ -161,6 +163,7 @@ dataset.zip
 - **真机预览连不上后端**：真机不能用 `localhost`。需把 `app.ts` 的 `baseUrl` 改成你电脑的**局域网 HTTPS 域名**，并在小程序后台配置 request / uploadFile / downloadFile 合法域名。
 - **没装 ffmpeg**：转码会降级为 `skipped`，不阻断上传；装上后自动启用真实探测。
 - **生产部署**：把 `.env` 的 `ENV` 改成 `prod`，填好 `JWT_SECRET` / `WX_APPID` / `WX_SECRET`，并设 `DEV_MOCK_LOGIN=false`；否则**启动会失败**（刻意的 fail-fast）。需要数据库/存储可用 `docker compose up -d` 起 PostgreSQL + MinIO。
+- **导出包自动消失**：这是设计行为——`EXPORT_TTL_DAYS`（默认 7 天）到期会删除对象存储里的导出 ZIP。需要长期留存就把该值调大或置 0，并把 ZIP 拷到别处。
 
 ---
 
@@ -192,5 +195,7 @@ dataset.zip
 - ✅ 进度统计：采集端「我的进度」（已通过/总数、完成率进度条、待录/待审/退回）；管理台全局完成率 + 采集员排行 + 按任务包统计
 - ✅ 录音暂停/继续（`pause`/`resume`）+ 中断处理（来电、切后台 `onInterruptionBegin`/`onHide` 标记中断，禁止无确认直接提交，中断标记随上传进审核队列）
 - ✅ 导出数据集：`audio/` + `metadata.csv`（音频编号/文本/采集人/采集时间/时长/采样率/声道/参数版本/审核状态）+ `transcripts.txt`（编号与音频一一对应）+ `manifest.json`（含 MD5）；含 §6.1 数量一致性与音频缺失校验
-- ✅ 烟测脚本：`tools/smoke_roles.py`（15）、`smoke_import.py`（17）、`smoke_reviewer.py`（17）、`smoke_progress_export.py`（33）
+- ✅ 审计日志查询：`GET /api/admin/audit-logs`（按操作类型/操作人/对象类型过滤 + 分页），管理台新增「审计日志」页；导入、上传、审核、导出、改角色、同意/撤回等操作全程留痕
+- ✅ 导出文件过期清理：`EXPORT_TTL_DAYS`（默认 7 天）到期自动删除导出包并清理孤儿文件；服务启动 / 异步导出完成后 / 手动 `POST /api/admin/export/cleanup` 三处触发
+- ✅ 烟测脚本：`tools/smoke_roles.py`（15）、`smoke_import.py`（17）、`smoke_reviewer.py`（17）、`smoke_progress_export.py`（33）、`smoke_audit_cleanup.py`（49）
 - ⏳ 待做：真机现场验证、生产密钥托管（Vault/KMS）、真实 ASR 辅助审核

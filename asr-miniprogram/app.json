@@ -11,7 +11,8 @@
       "pages": [
         "home/home",
         "import/import",
-        "review/review"
+        "review/review",
+        "audit/audit"
       ]
     }
   ],

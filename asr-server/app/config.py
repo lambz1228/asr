@@ -42,6 +42,9 @@ class Settings:
     # 演示数据：开发态自动播种示例任务
     seed_demo: bool = os.getenv("SEED_DEMO", "true").lower() == "true"
 
+    # 导出文件留存天数：超期自动清理（方案 §6.2）。置 0 表示不清理（保留全部）
+    export_ttl_days: int = int(os.getenv("EXPORT_TTL_DAYS", "7"))
+
     # 运行环境：dev | prod。prod 下强制校验密钥，缺失则启动失败
     env: str = os.getenv("ENV", "dev")
 

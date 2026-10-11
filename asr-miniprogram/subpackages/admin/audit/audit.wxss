@@ -1,0 +1,163 @@
+.page {
+  min-height: 100vh;
+  box-sizing: border-box;
+  padding: 24rpx 20rpx calc(30rpx + env(safe-area-inset-bottom));
+  background: #f5f5f5;
+}
+
+.topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 4rpx 4rpx 18rpx;
+}
+.topbar-title {
+  font-size: 30rpx;
+  font-weight: 600;
+  color: #1a1a1a;
+}
+.clean-btn {
+  background: #fff;
+  color: #1989fa;
+  font-size: 24rpx;
+  margin: 0;
+}
+.clean-btn::after {
+  border: none;
+}
+
+.tabs {
+  white-space: nowrap;
+  margin-bottom: 16rpx;
+}
+.tab {
+  display: inline-block;
+  padding: 10rpx 24rpx;
+  margin-right: 14rpx;
+  border-radius: 30rpx;
+  background: #fff;
+  font-size: 24rpx;
+  color: #666;
+}
+.tab.on {
+  background: #07c160;
+  color: #fff;
+}
+
+.jobs-toggle {
+  margin: 6rpx 4rpx 14rpx;
+  font-size: 23rpx;
+  color: #1989fa;
+}
+.job {
+  background: #fff;
+  border-radius: 12rpx;
+  padding: 20rpx 22rpx;
+  margin-bottom: 12rpx;
+}
+.job-line {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+}
+.job-id {
+  font-size: 24rpx;
+  color: #333;
+  font-family: monospace;
+}
+.job-status {
+  font-size: 22rpx;
+  color: #888;
+}
+.job-status.done {
+  color: #07c160;
+}
+.job-status.failed {
+  color: #e64340;
+}
+.job-status.expired {
+  color: #bbb;
+}
+.job-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 20rpx;
+  margin-top: 10rpx;
+  font-size: 22rpx;
+  color: #999;
+}
+.job-meta .bad {
+  color: #e64340;
+}
+
+.card {
+  background: #fff;
+  border-radius: 14rpx;
+  padding: 22rpx 24rpx;
+  margin-bottom: 16rpx;
+  box-shadow: 0 2rpx 10rpx rgba(0, 0, 0, 0.04);
+}
+.card-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+}
+.action {
+  font-size: 28rpx;
+  font-weight: 600;
+  color: #222;
+}
+.time {
+  font-size: 22rpx;
+  color: #aaa;
+}
+.who {
+  display: flex;
+  align-items: center;
+  gap: 14rpx;
+  margin-top: 12rpx;
+}
+.operator {
+  font-size: 25rpx;
+  color: #333;
+}
+.role {
+  font-size: 20rpx;
+  color: #1989fa;
+  background: #eef5ff;
+  border-radius: 6rpx;
+  padding: 2rpx 12rpx;
+}
+.target {
+  margin-top: 10rpx;
+  font-size: 23rpx;
+  color: #888;
+  word-break: break-all;
+}
+.detail {
+  margin-top: 10rpx;
+  font-size: 22rpx;
+  color: #999;
+  line-height: 1.5;
+  word-break: break-all;
+}
+
+.tip {
+  text-align: center;
+  color: #999;
+  margin-top: 60rpx;
+  font-size: 26rpx;
+}
+.tip.small {
+  margin-top: 20rpx;
+  font-size: 23rpx;
+}
+.more {
+  text-align: center;
+  color: #1989fa;
+  font-size: 25rpx;
+  padding: 22rpx 0;
+}
+.more.done {
+  color: #ccc;
+}

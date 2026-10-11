@@ -107,6 +107,9 @@ Page({
   onReview() {
     wx.navigateTo({ url: '/subpackages/admin/review/review' })
   },
+  onAudit() {
+    wx.navigateTo({ url: '/subpackages/admin/audit/audit' })
+  },
   onLogout() {
     wx.showModal({
       title: '退出登录',

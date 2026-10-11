@@ -20,6 +20,14 @@ async def lifespan(app: FastAPI):
     if settings.seed_demo:
         async with SessionLocal() as db:
             await seed_demo_data(db)
+    # 启动时清理超期导出文件（方案 §6.2）；失败不阻塞启动
+    try:
+        from app.cleanup import purge_expired_exports
+
+        async with SessionLocal() as db:
+            await purge_expired_exports(db)
+    except Exception:
+        pass
     yield
 
 
