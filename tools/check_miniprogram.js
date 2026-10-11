@@ -213,6 +213,48 @@ for (const f of walk(ROOT, (n) => n.endsWith('.wxml'))) {
 }
 orphanCount === 0 ? ok(`class 全部有样式定义（共 ${definedClasses.size} 个类名）`) : null
 
+console.log('== 7. WXSS 兼容性（calc 单位混用 / flex gap / 底部留白兜底） ==')
+// 这三类写法在小程序里都会「看起来能编译、真机上布局却不对」：
+//   a) calc() 里混用 % 与 rpx：rpx 折算取整后，两个 50% 卡 + 间距会超过 100%，
+//      flex 提前换行 —— 两列布局退化成单列（症状：每行只有一张卡、右侧空一条）。
+//   b) flex 容器用 gap：iOS 13 及更早的 WKWebView 不支持，间距整体消失。
+//   c) padding/margin 简写里塞 env()：一旦该条被机型丢弃，整条简写（含左右内边距）一起失效。
+for (const f of styleFiles) {
+  const raw = fs
+    .readFileSync(f, 'utf8')
+    .replace(/\/\*[\s\S]*?\*\//g, (m) => m.replace(/[^\n]/g, ' ')) // 注释挖空但保留行号
+  const lines = raw.split(/\r?\n/)
+  let sel = ''
+  let isFlex = false
+  for (let i = 0; i < lines.length; i++) {
+    const text = lines[i].trim()
+    if (!text) continue
+    if (text.endsWith('{')) {
+      sel = text.slice(0, -1).trim()
+      isFlex = false
+      continue
+    }
+    if (text === '}') {
+      sel = ''
+      isFlex = false
+      continue
+    }
+    for (const m of text.matchAll(/calc\(([^)]*)\)/g)) {
+      if (m[1].includes('%') && /rpx/.test(m[1])) {
+        fail(`${rel(f)}:${i + 1} calc() 里混用 % 与 rpx（${sel}）——rpx 取整会让换行提前，两列会退化成单列：${text}`)
+      }
+    }
+    if (/^display:\s*flex/.test(text)) isFlex = true
+    if (/^(row-|column-)?gap:/.test(text) && isFlex) {
+      warn(`${rel(f)}:${i + 1} flex 容器用了 gap（${sel}）——iOS 13 及更早不支持，间距会消失`)
+    }
+    if (/^(padding|margin):/.test(text) && /env\(/.test(text)) {
+      warn(`${rel(f)}:${i + 1} ${sel} 的 ${text.split(':')[0]} 简写里含 env()，建议拆出独立的 padding-bottom 兜底：${text}`)
+    }
+  }
+}
+ok(`WXSS 兼容性检查完成（${styleFiles.length} 个文件）`)
+
 console.log('')
 console.log(`检查完成：${errors.length} 个错误，${warns.length} 个警告`)
 process.exit(errors.length ? 1 : 0)

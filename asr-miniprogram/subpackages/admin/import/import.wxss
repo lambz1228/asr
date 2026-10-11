@@ -1,7 +1,8 @@
 .page {
   min-height: 100vh;
   box-sizing: border-box;
-  padding: 20rpx 20rpx calc(30rpx + env(safe-area-inset-bottom));
+  padding: 20rpx 20rpx 30rpx;
+  padding-bottom: calc(30rpx + env(safe-area-inset-bottom));
   background: #f5f5f5;
 }
 
@@ -40,7 +41,9 @@
 }
 .field-row {
   display: flex;
-  gap: 20rpx;
+}
+.field-row > view + view {
+  margin-left: 20rpx;
 }
 .field-row .field {
   border-bottom: none;
@@ -88,7 +91,9 @@
 }
 .links {
   display: flex;
-  gap: 24rpx;
+}
+.links > text + text {
+  margin-left: 24rpx;
 }
 .link {
   font-size: 24rpx;
@@ -168,15 +173,19 @@
 .result-rows {
   display: flex;
   flex-direction: column;
-  gap: 10rpx;
   font-size: 26rpx;
   color: #555;
+}
+.result-rows > text + text {
+  margin-top: 10rpx;
 }
 .errs {
   margin-top: 16rpx;
   display: flex;
   flex-direction: column;
-  gap: 8rpx;
+}
+.errs > text + text {
+  margin-top: 8rpx;
 }
 .err {
   font-size: 23rpx;

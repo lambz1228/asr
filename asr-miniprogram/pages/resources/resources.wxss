@@ -1,7 +1,10 @@
 .page {
   min-height: 100vh;
   box-sizing: border-box;
-  padding: 24rpx 24rpx calc(190rpx + env(safe-area-inset-bottom));
+  /* 拆成三条写：最后一条 calc 若被机型丢弃，仍保留固定底部留白 */
+  padding: 24rpx 24rpx 0;
+  padding-bottom: var(--tab-pad);
+  padding-bottom: calc(var(--tab-pad) + env(safe-area-inset-bottom));
 }
 
 /* ============================ 顶部 ============================ */
@@ -113,10 +116,14 @@
 .rules {
   display: flex;
   flex-wrap: wrap;
-  gap: 16rpx;
+  /* 不用 gap：老基础库 / iOS 13- 不支持 flex gap */
+  justify-content: space-between;
 }
 .rule {
-  width: calc(50% - 8rpx);
+  /* 纯百分比，不用 calc(50% - 8rpx)：% 与 rpx 混算的取整误差会让
+     两列加间距刚好超过 100%，每行只放得下一张卡，退化成单列 */
+  width: 48.6%;
+  margin-bottom: 18rpx;
   box-sizing: border-box;
   background: var(--card);
   border-radius: var(--r-lg);
@@ -402,7 +409,9 @@
 .sk-wrap {
   display: flex;
   flex-direction: column;
-  gap: 16rpx;
+}
+.sk-wrap > view + view {
+  margin-top: 16rpx;
 }
 .sk-line {
   height: 108rpx;

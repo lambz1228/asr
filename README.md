@@ -94,8 +94,11 @@ E:/asr/
 ├── asr-server/                          # FastAPI 后端（PostgreSQL / 对象存储 / FFmpeg）
 └── tools/
     ├── verify_recording.py              # 真机录音验证脚本
-    ├── check_miniprogram.js             # 小程序静态自检（TS 语法 / JSON / 页面与图标齐备 / 跳转 / WXML class）
+    ├── check_miniprogram.js             # 小程序静态自检（TS 语法 / JSON / 页面与图标齐备 / 跳转 / WXML class / WXSS 兼容性）
     ├── gen_tabbar_icons.py              # 生成 tabBar 图标（Pillow）
+    ├── gen_style_preview.py             # 用真实 WXSS（rpx→px、view→div）生成可截图的 HTML 预览
+    ├── fix_wxss_adaptive.py             # 一次性：批量修掉 calc(%)+rpx / flex gap / padding 简写含 env()
+    ├── prepare_avatars.py               # 头像去水印 + 裁切成 512×512
     ├── smoke_roles.py                   # 角色通路烟测（15 项）
     ├── smoke_import.py                  # Excel 导入与统一下发烟测（20 项，含 /tasks 新增字段）
     ├── smoke_reviewer.py                # 审核员权限/版本递增/退回原因烟测（17 项）
@@ -198,7 +201,8 @@ dataset.zip
 - ✅ 统一首页：采集员（同意书提醒 / 我的进度 / 开始采集 / 我的任务 / 公共池）与管理员（全局完成率 / 待审已采总数 / 导入·审核·审计入口 / 采集员排行 / 任务包）自适应；原「我的任务」页与管理台首页合并
 - ✅ 学习资源页：录音规范 6 条 + 采集前自检（同意书 / 隐私 / 审核台）+ 常见退回原因折叠；采集员可检索文本库点按直进采集，管理员可看导入格式两列说明、复制模板示例与上线检查项
 - ✅ 管理台入口：首页 · 待审统计 + 导入任务、录音审核、审计日志入口
-- ✅ 小程序静态自检：`tools/check_miniprogram.js`（TS 语法 / JSON / 页面与 tabBar 图标齐备 / 跳转路径合法 / 自定义 tabBar 组件齐备 / WXML 字面量 class 均有样式）
+- ✅ 小程序静态自检：`tools/check_miniprogram.js`（TS 语法 / JSON / 页面与 tabBar 图标齐备 / 跳转路径合法 / 自定义 tabBar 组件齐备 / WXML 字面量 class 均有样式 / **WXSS 兼容性**）
+- ✅ **自适应布局修复**：学习资源页两列规范卡改为纯百分比 + `space-between`（原来 `calc(50% - 8rpx)` 与 `gap` 叠加，rpx 取整后刚好超过 100%，真机上退化成单列）；全仓移除 flex `gap`（iOS 13- 不支持）与 `padding` 简写里的 `env()`；tab 页底部留白改用 `--tab-pad` 变量 + 兜底声明；新增 `tools/gen_style_preview.py` 用**真实 WXSS** 生成预览，避免手写 CSS 镜像骗人
 - ✅ 导入任务：上传 Excel（`序号`/`汉语文本` 两列表）/ CSV / JSON，或粘贴多行文本（服务端用 openpyxl 解析 xlsx）
 - ✅ 任务统一下发：勾选采集员后按人下发子任务——每人一份（`all`）或轮流分摊（`split`）；不指派则进公共池
 - ✅ 采集端公共池领取（乐观锁防重复领取）
@@ -214,7 +218,7 @@ dataset.zip
 - ✅ 导出文件过期清理：`EXPORT_TTL_DAYS`（默认 7 天）到期自动删除导出包并清理孤儿文件；服务启动 / 异步导出完成后 / 手动 `POST /api/admin/export/cleanup` 三处触发
 - ✅ 录音采集页（队列式版式）：顶部上/下条切换 + `x/总数` 计数、突出汉语文本与编号、发音人/任务包信息条、重录替换警告、圆形录音按钮 + 计时；提交成功自动跳下一条
 - ✅ 烟测脚本：`tools/smoke_roles.py`（15）、`smoke_import.py`（20）、`smoke_reviewer.py`（17）、`smoke_progress_export.py`（33）、`smoke_audit_cleanup.py`（49）
-- ✅ 小程序静态自检：`node tools/check_miniprogram.js`（TS 语法 / 全部 JSON / 页面四件套 / tabBar 图标 / 自定义 tabBar 组件 / 跳转路径 / WXML class；当前 0 错误 0 警告）
+- ✅ 小程序静态自检：`node tools/check_miniprogram.js`（TS 语法 / 全部 JSON / 页面四件套 / tabBar 图标 / 自定义 tabBar 组件 / 跳转路径 / WXML class / **WXSS 兼容性：calc(%+rpx)、flex gap、padding 简写含 env()**；当前 0 错误 0 警告）
 - ⏳ 待做：真机现场验证、生产密钥托管（Vault/KMS）、真实 ASR 辅助审核
 
 ## 十、项目介绍视频

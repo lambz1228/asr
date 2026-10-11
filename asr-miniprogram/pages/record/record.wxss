@@ -1,7 +1,10 @@
 .page {
   min-height: 100vh;
   box-sizing: border-box;
-  padding: 24rpx 26rpx calc(190rpx + env(safe-area-inset-bottom));
+  /* 拆成三条写：最后一条 calc 若被机型丢弃，仍保留固定底部留白 */
+  padding: 24rpx 26rpx 0;
+  padding-bottom: var(--tab-pad);
+  padding-bottom: calc(var(--tab-pad) + env(safe-area-inset-bottom));
 }
 
 /* ============================ 队首切换条 ============================ */
@@ -358,8 +361,10 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 10rpx;
   height: 44rpx;
+}
+.wv + .wv {
+  margin-left: 10rpx;
 }
 .wv {
   width: 8rpx;
@@ -477,7 +482,9 @@
 .sk-wrap {
   display: flex;
   flex-direction: column;
-  gap: 18rpx;
+}
+.sk-wrap > view + view {
+  margin-top: 18rpx;
 }
 .sk-text {
   height: 260rpx;

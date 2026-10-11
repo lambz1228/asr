@@ -1,7 +1,8 @@
 .page {
   min-height: 100vh;
   box-sizing: border-box;
-  padding: 24rpx 20rpx calc(30rpx + env(safe-area-inset-bottom));
+  padding: 24rpx 20rpx 30rpx;
+  padding-bottom: calc(30rpx + env(safe-area-inset-bottom));
   background: #f5f5f5;
 }
 
@@ -81,7 +82,6 @@
 .job-meta {
   display: flex;
   flex-wrap: wrap;
-  gap: 20rpx;
   margin-top: 10rpx;
   font-size: 22rpx;
   color: #999;
@@ -111,11 +111,16 @@
   font-size: 22rpx;
   color: #aaa;
 }
+.job-meta > text {
+  margin: 0 20rpx 8rpx 0;
+}
 .who {
   display: flex;
   align-items: center;
-  gap: 14rpx;
   margin-top: 12rpx;
+}
+.who > text + text {
+  margin-left: 14rpx;
 }
 .operator {
   font-size: 25rpx;

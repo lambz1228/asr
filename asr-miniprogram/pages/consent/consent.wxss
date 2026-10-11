@@ -4,7 +4,8 @@ page {
 .page {
   min-height: 100vh;
   box-sizing: border-box;
-  padding: 24rpx 28rpx calc(300rpx + env(safe-area-inset-bottom));
+  padding: 24rpx 28rpx 300rpx;
+  padding-bottom: calc(300rpx + env(safe-area-inset-bottom));
   display: flex;
   flex-direction: column;
 }
@@ -79,7 +80,8 @@ page {
   left: 0;
   right: 0;
   bottom: 0;
-  padding: 24rpx 28rpx calc(24rpx + env(safe-area-inset-bottom));
+  padding: 24rpx 28rpx 24rpx;
+  padding-bottom: calc(24rpx + env(safe-area-inset-bottom));
   background: rgba(238, 241, 246, 0.96);
   box-shadow: 0 -8rpx 28rpx rgba(20, 33, 56, 0.07);
 }
@@ -108,8 +110,10 @@ page {
 }
 .btn-row {
   display: flex;
-  gap: 20rpx;
   margin-top: 16rpx;
+}
+.btn-row > button + button {
+  margin-left: 20rpx;
 }
 .btn-ghost {
   flex: 1;

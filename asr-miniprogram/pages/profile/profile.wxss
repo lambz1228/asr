@@ -1,7 +1,10 @@
 .page {
   min-height: 100vh;
   box-sizing: border-box;
-  padding: 24rpx 24rpx calc(190rpx + env(safe-area-inset-bottom));
+  /* 拆成三条写：最后一条 calc 若被机型丢弃，仍保留固定底部留白 */
+  padding: 24rpx 24rpx 0;
+  padding-bottom: var(--tab-pad);
+  padding-bottom: calc(var(--tab-pad) + env(safe-area-inset-bottom));
 }
 
 /* ============================ 身份卡 ============================ */
@@ -139,7 +142,6 @@
 .chips {
   display: flex;
   flex-wrap: wrap;
-  gap: 12rpx;
   margin-top: 16rpx;
 }
 .chip {
@@ -148,6 +150,7 @@
   background: #f4f6fa;
   padding: 5rpx 14rpx;
   border-radius: 8rpx;
+  margin: 0 12rpx 12rpx 0;
 }
 .chip.ok {
   color: var(--green);

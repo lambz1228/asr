@@ -1,7 +1,10 @@
 .page {
   min-height: 100vh;
   box-sizing: border-box;
-  padding: 24rpx 24rpx calc(190rpx + env(safe-area-inset-bottom));
+  /* 拆成三条写：最后一条 calc 若被机型丢弃，仍保留固定底部留白 */
+  padding: 24rpx 24rpx 0;
+  padding-bottom: var(--tab-pad);
+  padding-bottom: calc(var(--tab-pad) + env(safe-area-inset-bottom));
 }
 
 /* ============================ 顶部问候卡 ============================ */
@@ -191,7 +194,6 @@
 .chips {
   display: flex;
   flex-wrap: wrap;
-  gap: 12rpx;
   margin-top: 16rpx;
 }
 .chip {
@@ -200,6 +202,7 @@
   background: #f4f6fa;
   padding: 5rpx 14rpx;
   border-radius: 8rpx;
+  margin: 0 12rpx 12rpx 0;
 }
 .chip.ok {
   color: var(--green);
@@ -368,13 +371,13 @@
   border-radius: var(--r-sm);
   display: flex;
   flex-direction: column;
-  gap: 6rpx;
   animation: slideDown 0.28s cubic-bezier(0.22, 0.9, 0.32, 1) backwards;
 }
 .reject-title {
   font-size: 21rpx;
   color: var(--red);
   font-weight: 600;
+  margin-bottom: 6rpx;
 }
 .reject-text {
   font-size: 25rpx;
@@ -414,8 +417,10 @@
 /* ============================ 统计三宫格 ============================ */
 .stats {
   display: flex;
-  gap: 16rpx;
   margin-bottom: 22rpx;
+}
+.stat + .stat {
+  margin-left: 16rpx;
 }
 .stat {
   flex: 1;
@@ -447,8 +452,10 @@
 .entries {
   display: flex;
   flex-direction: column;
-  gap: 16rpx;
   margin-bottom: 28rpx;
+}
+.entries > view + view {
+  margin-top: 16rpx;
 }
 .entry {
   display: flex;
@@ -536,7 +543,9 @@
 .sk-wrap {
   display: flex;
   flex-direction: column;
-  gap: 16rpx;
+}
+.sk-wrap > view + view {
+  margin-top: 16rpx;
 }
 .sk-card {
   height: 148rpx;

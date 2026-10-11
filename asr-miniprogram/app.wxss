@@ -38,8 +38,9 @@ page {
   --ease: cubic-bezier(0.22, 0.9, 0.32, 1);
   --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
 
-  /* 自定义 tabBar 高度（页面底部留白的唯一来源） */
-  --tabbar-h: 152rpx;
+  /* 自定义 tabBar 尺寸（页面底部留白的唯一来源，见 .tab-pad） */
+  --tabbar-h: 108rpx;
+  --tab-pad: 190rpx;
 
   background: var(--bg);
   color: var(--t1);
@@ -229,9 +230,13 @@ page {
   border-radius: var(--r-sm);
 }
 
-/* tab 页底部留白：避开自定义 tabBar 与全面屏安全区 */
+/* tab 页底部留白：避开自定义 tabBar 与全面屏安全区
+   注意：calc() 里混用 % 与 rpx 在部分机型 / 基础库上会被整条丢掉，
+   甚至让 flex 换行计算失真，所以这里只混用同为长度的 rpx 与 env()，
+   并保留一条不依赖 env() 的兜底声明。 */
 .tab-pad {
-  padding-bottom: calc(var(--tabbar-h) + env(safe-area-inset-bottom));
+  padding-bottom: var(--tab-pad);
+  padding-bottom: calc(var(--tab-pad) + env(safe-area-inset-bottom));
 }
 
 /* 空态 */

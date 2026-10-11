@@ -96,9 +96,11 @@ page {
 .tabs {
   display: flex;
   justify-content: center;
-  gap: 12rpx;
   margin: 32rpx 0 26rpx;
   animation: riseIn 0.5s cubic-bezier(0.22, 0.9, 0.32, 1) 0.08s backwards;
+}
+.tab-chip + .tab-chip {
+  margin-left: 12rpx;
 }
 .tab-chip {
   font-size: 21rpx;
