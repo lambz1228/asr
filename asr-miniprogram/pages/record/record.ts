@@ -16,7 +16,9 @@ Page({
   onLoad(options: any) {
     this.setData({
       taskId: options.taskId || '',
-      text: decodeURIComponent(options.text || '')
+      text: decodeURIComponent(options.text || ''),
+      // 已上传次数由服务端在 assignment.version 维护，这里仅用于生成唯一 uploadId
+      version: Number(options.version || 0) + 1
     })
   },
   async onStart() {

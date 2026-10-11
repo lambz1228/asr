@@ -62,13 +62,21 @@ async def upload_audio(
             wav_key = f"wav/{task_id}/{upload_id}.wav"
             await storage.save(wav_key, proc["wav_bytes"])
 
-    # 4) 落库：录音版本 + 关联任务
+    # 4) 关联任务并计算录音版本：退回重录递增，历史版本全部保留（方案 §10.2）
+    asg = await db.scalar(
+        select(models.TaskAssignment).where(
+            models.TaskAssignment.assignment_id == task_id
+        )
+    )
+    version = (asg.version + 1) if asg else 1
+
+    # 5) 落库：录音版本 + 关联任务
     rec_id = "r_" + uuid.uuid4().hex[:10]
     rec = models.Recording(
         recording_id=rec_id,
         assignment_id=task_id,
         upload_id=upload_id,
-        version=1,
+        version=version,
         raw_key=raw_key,
         wav_key=wav_key,
         real_sample_rate=probe.get("sample_rate"),
@@ -81,15 +89,10 @@ async def upload_audio(
     )
     db.add(rec)
 
-    # 5) 更新任务状态 / 版本
-    asg = await db.scalar(
-        select(models.TaskAssignment).where(
-            models.TaskAssignment.assignment_id == task_id
-        )
-    )
+    # 6) 更新任务状态 / 版本
     if asg:
+        asg.version = version
         asg.status = "uploaded"
-        asg.version += 1
 
     record_audit(
         db,

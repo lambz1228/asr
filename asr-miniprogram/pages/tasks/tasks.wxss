@@ -44,6 +44,24 @@
 .text {
   font-size: 30rpx;
 }
+.reject {
+  margin-top: 14rpx;
+  padding: 14rpx 18rpx;
+  background: #fff3f3;
+  border-radius: 8rpx;
+  display: flex;
+  flex-direction: column;
+  gap: 6rpx;
+}
+.reject-title {
+  font-size: 22rpx;
+  color: #e64340;
+}
+.reject-body {
+  font-size: 25rpx;
+  color: #8a3b39;
+  line-height: 1.5;
+}
 .tip {
   text-align: center;
   color: #999;

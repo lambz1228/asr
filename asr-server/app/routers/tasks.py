@@ -9,17 +9,48 @@ router = APIRouter()
 
 
 @router.get("/tasks")
-async def list_tasks(user=Depends(get_current_user), db=Depends(get_db)):
-    rows = await db.execute(
+async def list_tasks(
+    status: str | None = None,
+    user=Depends(get_current_user),
+    db=Depends(get_db),
+):
+    """我的任务。status 可选筛选；已退回的任务附带最近一次退回原因（供采集员针对性重录）。"""
+    q = (
         select(models.TaskAssignment, models.TextItem)
         .join(models.TextItem, models.TaskAssignment.text_id == models.TextItem.text_id)
         .where(models.TaskAssignment.assignee == user["uid"])
-        .order_by(models.TaskAssignment.id)
     )
-    tasks = [
-        {"id": asg.assignment_id, "text": text.text, "status": asg.status}
-        for asg, text in rows.all()
-    ]
+    if status:
+        q = q.where(models.TaskAssignment.status == status)
+    rows = await db.execute(q.order_by(models.TaskAssignment.id))
+
+    tasks = []
+    for asg, text in rows.all():
+        reason = None
+        if asg.status == "rejected":
+            # 取该任务下最新一次退回记录的原因
+            reason = await db.scalar(
+                select(models.ReviewLog.reason)
+                .join(
+                    models.Recording,
+                    models.Recording.recording_id == models.ReviewLog.recording_id,
+                )
+                .where(
+                    models.Recording.assignment_id == asg.assignment_id,
+                    models.ReviewLog.action == "reject",
+                )
+                .order_by(models.ReviewLog.id.desc())
+                .limit(1)
+            )
+        tasks.append(
+            {
+                "id": asg.assignment_id,
+                "text": text.text,
+                "status": asg.status,
+                "version": asg.version,
+                "rejectReason": reason,
+            }
+        )
     return ok({"list": tasks})
 
 

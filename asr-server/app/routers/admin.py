@@ -12,7 +12,7 @@ from sqlalchemy import select
 
 from .. import models
 from ..db import SessionLocal
-from ..deps import require_admin, get_db, record_audit
+from ..deps import get_db, record_audit, require_admin, require_reviewer
 from ..responses import ok
 from ..schemas import ReviewPayload
 from ..storage import storage
@@ -27,7 +27,7 @@ ALLOWED_ROLES = {"collector", "reviewer", "admin"}
 
 
 @router.get("/admin/audios")
-async def list_audios(principal=Depends(require_admin), db=Depends(get_db)):
+async def list_audios(principal=Depends(require_reviewer), db=Depends(get_db)):
     rows = await db.execute(
         select(models.Recording).order_by(models.Recording.created_at.desc()).limit(200)
     )
@@ -57,7 +57,7 @@ async def list_audios(principal=Depends(require_admin), db=Depends(get_db)):
 async def review_audio(
     recording_id: str,
     payload: ReviewPayload,
-    principal=Depends(require_admin),
+    principal=Depends(require_reviewer),
     db=Depends(get_db),
 ):
     if payload.action not in ("approve", "reject"):
@@ -180,7 +180,7 @@ async def _run_export_job(job_id: str, recs) -> None:
 
 
 @router.post("/admin/export")
-async def export_dataset(principal=Depends(require_admin), db=Depends(get_db)):
+async def export_dataset(principal=Depends(require_reviewer), db=Depends(get_db)):
     """导出已通过录音。
 
     - 数量 ≤ 阈值：同步流式返回 zip。
@@ -233,7 +233,7 @@ async def export_dataset(principal=Depends(require_admin), db=Depends(get_db)):
 
 
 @router.get("/admin/export/{job_id}")
-async def export_job_status(job_id: str, principal=Depends(require_admin), db=Depends(get_db)):
+async def export_job_status(job_id: str, principal=Depends(require_reviewer), db=Depends(get_db)):
     """导出任务状态查询；完成返回签名下载 URL。"""
     job = await db.get(models.ExportJob, job_id)
     if not job:

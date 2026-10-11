@@ -5,6 +5,8 @@ interface TaskItem {
   id: string
   text: string
   status: string
+  version: number
+  rejectReason: string | null
 }
 
 const STATUS_TEXT: Record<string, string> = {
@@ -68,7 +70,12 @@ Page({
   onTapTask(e: any) {
     const id = e.currentTarget.dataset.id
     const text = e.currentTarget.dataset.text
-    wx.navigateTo({ url: `/pages/record/record?taskId=${id}&text=${encodeURIComponent(text)}` })
+    const version = e.currentTarget.dataset.version || 0
+    wx.navigateTo({
+      url: `/pages/record/record?taskId=${id}&text=${encodeURIComponent(
+        text
+      )}&version=${version}`
+    })
   },
   // 领取公共池任务：后端乐观锁，抢领失败会返回 claimed=false
   async onClaim(e: any) {

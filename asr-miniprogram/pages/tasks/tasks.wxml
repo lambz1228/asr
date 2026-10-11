@@ -11,10 +11,15 @@
     class="card"
     data-id="{{item.id}}"
     data-text="{{item.text}}"
+    data-version="{{item.version}}"
     bindtap="onTapTask"
   >
     <view class="status">{{statusText[item.status] || item.status}}</view>
     <view class="text">{{item.text}}</view>
+    <view wx:if="{{item.status === 'rejected'}}" class="reject">
+      <text class="reject-title">退回原因</text>
+      <text class="reject-body">{{item.rejectReason || '未填写'}}，请点击重录</text>
+    </view>
   </view>
   <view wx:if="{{!loading && tasks.length === 0}}" class="tip">暂无任务</view>
 
