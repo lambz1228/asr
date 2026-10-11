@@ -1,0 +1,9 @@
+<view class="container">
+  <view class="title">ASR 音频采集</view>
+  <view class="subtitle">采集员登录后进入录音采集；管理员进入导入任务与审核管理台</view>
+
+  <button class="btn-primary login-btn" loading="{{loading}}" bindtap="onLogin">微信登录（采集员）</button>
+
+  <view class="dev-tip">本地开发：可切换角色登录</view>
+  <button class="btn-plain admin-btn" loading="{{loading}}" bindtap="onLoginAsAdmin">管理员登录（演示）</button>
+</view>

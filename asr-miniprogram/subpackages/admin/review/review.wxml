@@ -1,0 +1,41 @@
+<view class="page">
+  <view class="topbar">
+    <scroll-view class="tabs" scroll-x>
+      <view class="tab {{filter==='uploaded'?'on':''}}" data-f="uploaded" bindtap="setFilter">待审核</view>
+      <view class="tab {{filter==='approved'?'on':''}}" data-f="approved" bindtap="setFilter">已通过</view>
+      <view class="tab {{filter==='rejected'?'on':''}}" data-f="rejected" bindtap="setFilter">已退回</view>
+      <view class="tab {{filter==='all'?'on':''}}" data-f="all" bindtap="setFilter">全部</view>
+    </scroll-view>
+    <button class="export-btn" size="mini" bindtap="onExport">导出</button>
+  </view>
+
+  <view wx:if="{{loading}}" class="tip">加载中...</view>
+  <block wx:else>
+    <view wx:if="{{displayItems.length === 0}}" class="tip">暂无记录</view>
+    <view wx:for="{{displayItems}}" wx:key="recordingId" class="card">
+      <view class="card-head">
+        <text class="rid">{{item.recordingId}}</text>
+        <text class="badge {{item.status}}">{{statusText[item.status]}}</text>
+      </view>
+      <view class="meta">
+        <text>采样率 {{item.realSampleRate || '—'}}Hz</text>
+        <text>声道 {{item.realChannels || '—'}}</text>
+        <text>编码 {{item.realCodec || '—'}}</text>
+        <text>时长 {{item.duration ? item.duration + 's' : '—'}}</text>
+      </view>
+      <view wx:if="{{item.qualityFlags.length}}" class="flags">
+        <text wx:for="{{item.qualityFlags}}" wx:for-item="f" wx:key="*this" class="flag">{{f}}</text>
+      </view>
+      <view class="actions">
+        <button class="play-btn" size="mini" bindtap="onPlay" data-id="{{item.recordingId}}">
+          {{playingId === item.recordingId ? '停止' : '试听'}}
+        </button>
+        <block wx:if="{{item.status === 'uploaded'}}">
+          <button class="ok-btn" size="mini" bindtap="onApprove" data-id="{{item.recordingId}}">通过</button>
+          <button class="no-btn" size="mini" bindtap="onReject" data-id="{{item.recordingId}}">退回</button>
+        </block>
+        <text wx:else class="reviewed">已处理</text>
+      </view>
+    </view>
+  </block>
+</view>

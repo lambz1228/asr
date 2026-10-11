@@ -1,0 +1,51 @@
+.container {
+  padding: 20rpx;
+}
+.review-entry {
+  background: #07c160;
+  color: #fff;
+  font-size: 28rpx;
+  text-align: center;
+  padding: 22rpx;
+  border-radius: 12rpx;
+  margin-bottom: 20rpx;
+}
+.section-title {
+  margin: 24rpx 4rpx 14rpx;
+  font-size: 26rpx;
+  color: #666;
+}
+.card {
+  background: #fff;
+  border-radius: 12rpx;
+  padding: 24rpx;
+  margin-bottom: 20rpx;
+}
+.pool-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20rpx;
+}
+.pool-card .text {
+  flex: 1;
+  min-width: 0;
+}
+.claim-btn {
+  background: #07c160;
+  color: #fff;
+  flex-shrink: 0;
+}
+.status {
+  font-size: 22rpx;
+  color: #888;
+  margin-bottom: 8rpx;
+}
+.text {
+  font-size: 30rpx;
+}
+.tip {
+  text-align: center;
+  color: #999;
+  margin-top: 60rpx;
+}

@@ -1,0 +1,9 @@
+<view class="container">
+  <view class="text-box">{{text}}</view>
+  <view class="status">{{statusText}}</view>
+
+  <button class="ctrl" bindtap="onStart">{{recording ? '停止' : (recorded ? '重录' : '开始录音')}}</button>
+  <button class="ctrl" wx:if="{{recorded}}" bindtap="onPlay">{{playing ? '播放中...' : '试听'}}</button>
+  <button class="ctrl" wx:if="{{recorded}}" bindtap="onRerecord">清除重录</button>
+  <button class="ctrl primary" wx:if="{{recorded}}" bindtap="onSubmit">提交上传</button>
+</view>

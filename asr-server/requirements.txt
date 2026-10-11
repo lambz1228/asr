@@ -1,0 +1,11 @@
+fastapi
+uvicorn[standard]
+python-multipart
+SQLAlchemy[asyncio]>=2.0
+greenlet
+aiosqlite
+asyncpg
+aioboto3
+python-dotenv
+httpx
+openpyxl

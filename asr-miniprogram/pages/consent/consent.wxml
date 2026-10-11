@@ -1,0 +1,57 @@
+<view class="page">
+  <view class="header">
+    <view class="title">语音信息单独同意书</view>
+    <view class="subtitle">敏感个人信息 · 需单独、明确授权</view>
+  </view>
+
+  <scroll-view class="doc" scroll-y>
+    <view class="doc-section">
+      <view class="doc-h">一、我们收集什么</view>
+      <view class="doc-p">本小程序采集您朗读指定文本时录制的语音。语音包含声纹特征与语音内容，依据《中华人民共和国个人信息保护法》属于<text class="emph">敏感个人信息</text>。</view>
+    </view>
+    <view class="doc-section">
+      <view class="doc-h">二、用途与范围</view>
+      <view class="doc-p">所录音频仅用于「ASR 语音数据采集」项目指定的训练/标注用途，不会用于与您约定无关的场景，亦不会与通用条款捆绑授权。</view>
+    </view>
+    <view class="doc-section">
+      <view class="doc-h">三、单独同意</view>
+      <view class="doc-p">本同意书独立于其他用户协议与隐私政策，需您<text class="emph">单独、明确</text>勾选并确认。未签署前，您无法上传任何音频。</view>
+    </view>
+    <view class="doc-section">
+      <view class="doc-h">四、撤回权</view>
+      <view class="doc-p">您可随时在本页面撤回同意。撤回后我们将停止新的采集；已上传数据按保留期与撤回处理规则留存或删除，具体以项目公告为准。</view>
+    </view>
+    <view class="doc-section">
+      <view class="doc-h">五、存储与安全</view>
+      <view class="doc-p">音频经加密传输与存储，访问受权限控制并留存审计日志。原始采集参数（真实采样率、声道、编码、时长）将如实记录，不做虚假修饰。</view>
+    </view>
+  </scroll-view>
+
+  <view class="privacy-link" bindtap="onOpenPrivacy">
+    <text>查看微信平台 {{privacyContractName}}</text>
+    <text class="arrow">›</text>
+  </view>
+
+  <view class="agree-row">
+    <checkbox-group bindchange="onAgreeChange">
+      <label class="agree-label">
+        <checkbox value="agree" checked="{{agreed}}" color="#07c160" />
+        <text>我已阅读并同意上述《语音信息单独同意书》</text>
+      </label>
+    </checkbox-group>
+  </view>
+
+  <view class="actions">
+    <button class="btn-primary" loading="{{submitting}}" disabled="{{submitting || !agreed}}" bindtap="onSubmitConsent">
+      同意并提交
+    </button>
+    <view class="btn-row">
+      <button class="btn-ghost" wx:if="{{signed}}" loading="{{withdrawing}}" disabled="{{withdrawing}}" bindtap="onWithdraw">
+        撤回同意
+      </button>
+      <button class="btn-ghost danger" bindtap="onExit">
+        暂不授权，退出
+      </button>
+    </view>
+  </view>
+</view>

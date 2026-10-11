@@ -1,0 +1,15 @@
+{
+  "compilerOptions": {
+    "target": "es2017",
+    "module": "commonjs",
+    "moduleResolution": "node",
+    "strict": false,
+    "noImplicitAny": false,
+    "experimentalDecorators": true,
+    "allowJs": true,
+    "lib": ["es2017", "dom"],
+    "typeRoots": ["./node_modules/@types", "./node_modules/miniprogram-api-typings"]
+  },
+  "include": ["./**/*.ts"],
+  "exclude": ["node_modules", "miniprogram_npm"]
+}

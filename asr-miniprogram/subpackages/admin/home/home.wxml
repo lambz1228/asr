@@ -1,0 +1,59 @@
+<view class="page">
+  <view class="hero">
+    <view class="hero-title">管理台</view>
+    <view class="hero-sub">{{roleText}}<text wx:if="{{userId}}"> · {{userId}}</text></view>
+  </view>
+
+  <view class="stats">
+    <view class="stat">
+      <view class="num">{{pendingAudios}}</view>
+      <view class="label">待审核</view>
+    </view>
+    <view class="stat">
+      <view class="num">{{totalAudios}}</view>
+      <view class="label">录音总数</view>
+    </view>
+    <view class="stat">
+      <view class="num">{{pkgs.length}}</view>
+      <view class="label">任务包</view>
+    </view>
+  </view>
+
+  <view class="entries">
+    <view wx:if="{{isAdmin}}" class="entry" bindtap="onImport">
+      <view class="entry-ico import">＋</view>
+      <view class="entry-body">
+        <view class="entry-title">导入任务</view>
+        <view class="entry-desc">上传 Excel/CSV 或粘贴文本，统一下发给采集员</view>
+      </view>
+      <view class="entry-arrow">›</view>
+    </view>
+    <view class="entry" bindtap="onReview">
+      <view class="entry-ico review">✓</view>
+      <view class="entry-body">
+        <view class="entry-title">录音审核</view>
+        <view class="entry-desc">试听录音，通过或退回{{pendingAudios ? '（' + pendingAudios + ' 条待审）' : ''}}</view>
+      </view>
+      <view class="entry-arrow">›</view>
+    </view>
+  </view>
+
+  <view class="section-title">任务包</view>
+  <view wx:if="{{loading}}" class="tip">加载中...</view>
+  <view wx:elif="{{pkgs.length === 0}}" class="tip">暂无任务包，去「导入任务」创建一个</view>
+  <block wx:else>
+    <view class="card" wx:for="{{pkgs}}" wx:key="pkgId">
+      <view class="card-head">
+        <text class="pkg-name">{{item.name}}</text>
+        <text class="pkg-id">{{item.pkgId}}</text>
+      </view>
+      <view class="meta">
+        <text>文本 {{item.texts}}</text>
+        <text>任务 {{item.assignments}}</text>
+        <text>待录 {{item.pending}}</text>
+      </view>
+    </view>
+  </block>
+
+  <button class="logout" bindtap="onLogout">退出登录</button>
+</view>

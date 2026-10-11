@@ -1,0 +1,34 @@
+<view class="container">
+  <view wx:if="{{canManage}}" class="review-entry" bindtap="onEnterConsole">
+    进入管理台 ›
+  </view>
+
+  <view class="section-title">我的任务</view>
+  <view wx:if="{{loading}}" class="tip">加载中...</view>
+  <view
+    wx:for="{{tasks}}"
+    wx:key="id"
+    class="card"
+    data-id="{{item.id}}"
+    data-text="{{item.text}}"
+    bindtap="onTapTask"
+  >
+    <view class="status">{{statusText[item.status] || item.status}}</view>
+    <view class="text">{{item.text}}</view>
+  </view>
+  <view wx:if="{{!loading && tasks.length === 0}}" class="tip">暂无任务</view>
+
+  <block wx:if="{{pool.length}}">
+    <view class="section-title">公共池（可领取）</view>
+    <view wx:for="{{pool}}" wx:key="id" class="card pool-card">
+      <view class="text">{{item.text}}</view>
+      <button
+        class="claim-btn"
+        size="mini"
+        loading="{{claiming === item.id}}"
+        data-id="{{item.id}}"
+        bindtap="onClaim"
+      >领取</button>
+    </view>
+  </block>
+</view>

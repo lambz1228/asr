@@ -1,0 +1,23 @@
+.container {
+  padding: 40rpx;
+}
+.text-box {
+  background: #fff;
+  border-radius: 12rpx;
+  padding: 32rpx;
+  font-size: 32rpx;
+  line-height: 1.6;
+  margin-bottom: 30rpx;
+}
+.status {
+  color: #666;
+  font-size: 26rpx;
+  margin-bottom: 30rpx;
+}
+.ctrl {
+  margin-bottom: 20rpx;
+}
+.ctrl.primary {
+  background: #07c160;
+  color: #fff;
+}

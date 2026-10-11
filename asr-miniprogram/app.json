@@ -1,0 +1,31 @@
+{
+  "pages": [
+    "pages/login/login",
+    "pages/consent/consent",
+    "pages/tasks/tasks",
+    "pages/record/record"
+  ],
+  "subPackages": [
+    {
+      "root": "subpackages/admin",
+      "pages": [
+        "home/home",
+        "import/import",
+        "review/review"
+      ]
+    }
+  ],
+  "window": {
+    "navigationBarBackgroundColor": "#ffffff",
+    "navigationBarTitleText": "ASR 采集",
+    "navigationBarTextStyle": "black",
+    "backgroundColor": "#f5f5f5"
+  },
+  "permission": {
+    "scope.record": {
+      "desc": "用于采集语音训练数据，请允许麦克风权限"
+    }
+  },
+  "sitemapLocation": "sitemap.json",
+  "lazyCodeLoading": "requiredComponents"
+}

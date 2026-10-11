@@ -1,0 +1,35 @@
+.container {
+  padding: 80rpx 40rpx;
+}
+.title {
+  font-size: 40rpx;
+  text-align: center;
+  margin-bottom: 20rpx;
+}
+.subtitle {
+  font-size: 24rpx;
+  line-height: 1.6;
+  text-align: center;
+  color: #999;
+  margin-bottom: 60rpx;
+}
+.login-btn {
+  background: #07c160;
+  color: #fff;
+}
+.dev-tip {
+  margin-top: 60rpx;
+  text-align: center;
+  font-size: 24rpx;
+  color: #999;
+}
+.admin-btn {
+  margin-top: 20rpx;
+  font-size: 28rpx;
+  color: #576b95;
+  background: transparent;
+  border: 1rpx solid #d0d6e2;
+}
+.admin-btn::after {
+  border: none;
+}
