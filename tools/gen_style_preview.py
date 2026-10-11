@@ -138,7 +138,12 @@ def blob_idx():
 
 
 def tabbar_strip_html():
-    """4 个下标各渲染一条 tabBar，用来验证 transform 版高亮块的落点是否正确"""
+    """4 个下标各渲染一条 tabBar，用来验证 transform 版高亮块的落点是否正确。
+
+    这里一律按「静止态」渲染（no-anim，即关掉 transition）——真机上切页时
+    高亮块就是这个状态：新页面首个渲染帧就已经在正确位置，不播过渡。
+    过渡只用于点击离场那一次，静态预览无法体现，故不在此模拟。
+    """
     out = []
     for i, (txt, _, _) in enumerate(TABBAR):
         items = []
@@ -151,10 +156,10 @@ def tabbar_strip_html():
         out.append(
             '  <div class="bar-demo">\n'
             '    <div class="bar">\n'
-            '      <div class="blob-track" style="transform: translateX(%d%%)"><div class="blob"></div></div>\n'
+            '      <div class="blob-track no-anim" style="transform: translateX(%d%%)"><div class="blob"></div></div>\n'
             '%s\n'
             '    </div>\n'
-            '    <div class="bar-demo-label">blobIdx = %d → %s</div>\n'
+            '    <div class="bar-demo-label">blobIdx = %d → %s（静止态・no-anim）</div>\n'
             '  </div>' % (i * 100, '\n'.join(items), i, txt)
         )
     return '\n'.join(out)
