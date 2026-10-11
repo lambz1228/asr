@@ -216,3 +216,23 @@ dataset.zip
 - ✅ 烟测脚本：`tools/smoke_roles.py`（15）、`smoke_import.py`（20）、`smoke_reviewer.py`（17）、`smoke_progress_export.py`（33）、`smoke_audit_cleanup.py`（49）
 - ✅ 小程序静态自检：`node tools/check_miniprogram.js`（TS 语法 / 全部 JSON / 页面四件套 / tabBar 图标 / 自定义 tabBar 组件 / 跳转路径 / WXML class；当前 0 错误 0 警告）
 - ⏳ 待做：真机现场验证、生产密钥托管（Vault/KMS）、真实 ASR 辅助审核
+
+## 十、项目介绍视频
+
+用 `project-intro-video` 技能（Canvas2D 逐帧渲染 + ffmpeg 编码 + edge-tts 中文配音）生成的宣传片，产物在 `video/`：
+
+| 文件 | 说明 |
+|---|---|
+| `video/out/asr-intro.mp4` | 成片：1920×1080 / 30fps / 59.3s / H.264 + AAC，约 3.9 MB |
+| `video/config.js` | 视频文案（改这里重出片） |
+| `video/gen_voiceover.py` | 中文配音生成（edge-tts → `audio/s0..s4.wav`） |
+| `video/out/preview_s*.png` | 每幕抽帧预览，用于校对版式与字幕 |
+
+片长结构：开场 → 痛点 → 核心功能 → 使用方式 → CTA（每幕时长由旁白长度决定）。
+
+重出片（两步，均在项目根执行）：
+
+```bash
+python video/gen_voiceover.py
+node "$HOME/.workbuddy/skills/project-intro-video/scripts/render-video.js" --config video/config.js --audio-dir video/audio --out video/out/asr-intro.mp4
+```

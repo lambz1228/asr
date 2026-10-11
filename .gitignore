@@ -54,5 +54,9 @@ desktop.ini
 *.log
 logs/
 
+# ---------- 视频生成产物（脚本可重建，只留成片 mp4）----------
+video/audio/
+video/out/*.png
+
 # ---------- Agent 工作区（本地记忆，按需保留）----------
 .workbuddy/
