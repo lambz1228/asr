@@ -1,25 +1,79 @@
-<view class="container">
-  <view class="text-box">{{text}}</view>
-  <view class="status {{interrupted ? 'warn' : ''}}">{{statusText}}</view>
-
-  <view wx:if="{{interrupted}}" class="alert">
-    该录音在录制过程中被打断（来电 / 切后台），内容可能不完整，建议「清除重录」
+<view class="page">
+  <!-- 顶部：上一条 / 计数 / 下一条 -->
+  <view class="switchbar">
+    <view class="sw-arrow {{index <= 0 ? 'disabled' : ''}}" bindtap="onPrev">‹</view>
+    <view class="sw-count">{{index + 1}}/{{total}}</view>
+    <view class="sw-arrow {{index >= total - 1 ? 'disabled' : ''}}" bindtap="onNext">›</view>
   </view>
 
-  <!-- 未录音 / 录音中 -->
-  <block wx:if="{{!recorded}}">
-    <button class="ctrl {{recording ? 'danger' : 'primary'}}" bindtap="onToggleRecord">
-      {{recording ? '停止录音' : '开始录音'}}
-    </button>
-    <button wx:if="{{recording}}" class="ctrl" bindtap="onTogglePause">
-      {{paused ? '继续录音' : '暂停'}}
-    </button>
-  </block>
+  <view wx:if="{{loading}}" class="tip">加载中...</view>
 
-  <!-- 已录完 -->
-  <block wx:else>
-    <button class="ctrl" bindtap="onPlay">{{playing ? '停止播放' : '试听'}}</button>
-    <button class="ctrl" bindtap="onRerecord">清除重录</button>
-    <button class="ctrl primary" bindtap="onSubmit">提交上传</button>
+  <block wx:if="{{current}}">
+    <!-- 汉语文本（红框位置） -->
+    <view class="text-card">
+      <view class="text-main">{{current.text}}</view>
+      <view wx:if="{{current.textId}}" class="text-id">编号 {{current.textId}}</view>
+    </view>
+    <view class="explain">
+      说明：第 {{index + 1}} 条 / 共 {{total}} 条 · 句子级采集
+    </view>
+
+    <!-- 信息条：发音人 / 任务包 -->
+    <view class="info-bar">
+      <view class="info-ico">👤</view>
+      <view class="info-label">当前发音人：</view>
+      <view class="info-val">{{speaker || '—'}}</view>
+    </view>
+    <view class="info-bar">
+      <view class="info-ico">📋</view>
+      <view class="info-label">当前任务包：</view>
+      <view class="info-val">{{current.pkgName || '未命名任务包'}}</view>
+    </view>
+
+    <!-- 退回原因 -->
+    <view wx:if="{{current.rejectReason}}" class="reject-bar">
+      退回原因：{{current.rejectReason}}
+    </view>
+
+    <!-- 重录替换警告（仅当该任务此前已录过） -->
+    <view wx:if="{{replacing}}" class="warn-bar">
+      注意：点击录音并保存，就会替换之前的录音。
+    </view>
+
+    <!-- 中断告警 -->
+    <view wx:if="{{interrupted}}" class="alert">
+      该录音在录制过程中被打断（来电 / 切后台），内容可能不完整，建议「清除重录」
+    </view>
+
+    <!-- 录音区 -->
+    <view class="rec-panel {{recording ? (paused ? 'paused' : 'on') : ''}}">
+      <view class="rec-timer">{{timerText}}</view>
+      <view wx:if="{{toast}}" class="rec-toast">{{toast}}</view>
+      <view class="rec-btn-wrap">
+        <view class="rec-ring {{recording ? 'recording' : ''}}" bindtap="onToggleRecord">
+          <view class="rec-btn {{recording ? 'stop' : ''}}">
+            <view class="rec-dot" wx:if="{{!recording}}"></view>
+            <view class="rec-square" wx:else></view>
+          </view>
+        </view>
+      </view>
+      <view class="rec-label">{{recLabel}}</view>
+    </view>
+
+    <view wx:if="{{statusText}}" class="status {{interrupted ? 'warn' : ''}}">{{statusText}}</view>
+
+    <!-- 录制中：暂停 / 继续 -->
+    <view wx:if="{{recording}}" class="row">
+      <button class="btn ghost" bindtap="onTogglePause">{{paused ? '继续录音' : '暂停'}}</button>
+    </view>
+
+    <!-- 已录完：试听 / 清除重录 / 保存提交 -->
+    <block wx:if="{{recorded}}">
+      <view class="row">
+        <button class="btn ghost" bindtap="onPlay">{{playing ? '停止播放' : '试听'}}</button>
+        <button class="btn ghost" bindtap="onRerecord">清除重录</button>
+      </view>
+      <button class="btn primary" bindtap="onSubmit">保存并提交</button>
+    </block>
   </block>
 </view>

@@ -99,8 +99,17 @@ with TestClient(app) as c:
     check("下发给 1 人 → 3 条子任务", d.get("createdAssignments") == 3, str(d))
     check("返回下发对象", d.get("assignees") == ["u_demo"], str(d.get("assignees")))
 
-    base = len(c.get("/api/tasks", headers=H(col_t)).json()["data"]["list"])
+    my = c.get("/api/tasks", headers=H(col_t)).json()["data"]["list"]
+    base = len(my)
     check("采集员「我的任务」直接可见（seed 3 + 新 3 = 6）", base == 6, f"实际 {base}")
+
+    print("[1b] /tasks 附带 textId / pkgName（录音页队列信息）")
+    row = next((x for x in my if x.get("pkgId") == "pkg_xlsx_all"), None)
+    check("返回 textId", bool(row and row.get("textId")), str(row))
+    check("返回 pkgName（任务包名）", bool(row and row.get("pkgName") == "xlsx全量下发"),
+          str(row and row.get("pkgName")))
+    check("仍返回 version 与 status", bool(row and "version" in row and row.get("status")),
+          str(row))
 
     print("[2] distribute=all 多接收人 → 每人一份")
     res = import_file(admin_t, "录音文本.xlsx", make_xlsx(TEXTS), XLSX_MIME,

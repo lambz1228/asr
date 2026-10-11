@@ -27,7 +27,11 @@ async def list_tasks(
     user=Depends(get_current_user),
     db=Depends(get_db),
 ):
-    """我的任务。status 可选筛选；已退回的任务附带最近一次退回原因（供采集员针对性重录）。"""
+    """我的任务。status 可选筛选；已退回的任务附带最近一次退回原因（供采集员针对性重录）。
+
+    录音页按 deque 顺序上下条切换，因此额外返回 textId 与所属任务包名（pkgName），
+    供界面展示「当前任务包」「编号」等信息（对齐参考版式）。
+    """
     q = (
         select(models.TaskAssignment, models.TextItem)
         .join(models.TextItem, models.TaskAssignment.text_id == models.TextItem.text_id)
@@ -36,9 +40,21 @@ async def list_tasks(
     if status:
         q = q.where(models.TaskAssignment.status == status)
     rows = await db.execute(q.order_by(models.TaskAssignment.id))
+    pairs = rows.all()
+
+    # 批量取任务包名，避免逐条查询（N+1）
+    pkg_ids = {asg.pkg_id for asg, _ in pairs}
+    pkg_names: dict[str, str] = {}
+    if pkg_ids:
+        pk = await db.execute(
+            select(models.TaskPackage.pkg_id, models.TaskPackage.name).where(
+                models.TaskPackage.pkg_id.in_(pkg_ids)
+            )
+        )
+        pkg_names = {pid: name for pid, name in pk.all()}
 
     tasks = []
-    for asg, text in rows.all():
+    for asg, text in pairs:
         reason = None
         if asg.status == "rejected":
             # 取该任务下最新一次退回记录的原因
@@ -58,7 +74,10 @@ async def list_tasks(
         tasks.append(
             {
                 "id": asg.assignment_id,
+                "textId": text.text_id,
                 "text": text.text,
+                "pkgId": asg.pkg_id,
+                "pkgName": pkg_names.get(asg.pkg_id, ""),
                 "status": asg.status,
                 "version": asg.version,
                 "rejectReason": reason,

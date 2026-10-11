@@ -43,7 +43,7 @@ Uvicorn running on http://0.0.0.0:8000
 |---|---|---|
 | 1 | 点「微信登录（采集员）」 | 自动跳到《语音信息单独同意书》 |
 | 2 | 勾选后点「同意并提交」 | 进入「我的任务」 |
-| 3 | 点一条任务 → 录音 → 试听 → 提交 | 提示"上传成功" |
+| 3 | 点一条任务 → 录音 → 试听 → 提交 | 提示"上传成功"，并自动跳到下一条 |
 
 **通路 B · 管理员（导入任务 / 审核）**
 
@@ -87,7 +87,7 @@ E:/asr/
 └── tools/
     ├── verify_recording.py              # 真机录音验证脚本
     ├── smoke_roles.py                   # 角色通路烟测（15 项）
-    ├── smoke_import.py                  # Excel 导入与统一下发烟测（17 项）
+    ├── smoke_import.py                  # Excel 导入与统一下发烟测（20 项，含 /tasks 新增字段）
     ├── smoke_reviewer.py                # 审核员权限/版本递增/退回原因烟测（17 项）
     ├── smoke_progress_export.py         # 进度统计/导出完整性/录音中断烟测（33 项）
     └── smoke_audit_cleanup.py           # 审计日志查询/导出过期清理烟测（49 项）
@@ -197,5 +197,6 @@ dataset.zip
 - ✅ 导出数据集：`audio/` + `metadata.csv`（音频编号/文本/采集人/采集时间/时长/采样率/声道/参数版本/审核状态）+ `transcripts.txt`（编号与音频一一对应）+ `manifest.json`（含 MD5）；含 §6.1 数量一致性与音频缺失校验
 - ✅ 审计日志查询：`GET /api/admin/audit-logs`（按操作类型/操作人/对象类型过滤 + 分页），管理台新增「审计日志」页；导入、上传、审核、导出、改角色、同意/撤回等操作全程留痕
 - ✅ 导出文件过期清理：`EXPORT_TTL_DAYS`（默认 7 天）到期自动删除导出包并清理孤儿文件；服务启动 / 异步导出完成后 / 手动 `POST /api/admin/export/cleanup` 三处触发
-- ✅ 烟测脚本：`tools/smoke_roles.py`（15）、`smoke_import.py`（17）、`smoke_reviewer.py`（17）、`smoke_progress_export.py`（33）、`smoke_audit_cleanup.py`（49）
+- ✅ 录音采集页（队列式版式）：顶部上/下条切换 + `x/总数` 计数、突出汉语文本与编号、发音人/任务包信息条、重录替换警告、圆形录音按钮 + 计时；提交成功自动跳下一条
+- ✅ 烟测脚本：`tools/smoke_roles.py`（15）、`smoke_import.py`（20）、`smoke_reviewer.py`（17）、`smoke_progress_export.py`（33）、`smoke_audit_cleanup.py`（49）
 - ⏳ 待做：真机现场验证、生产密钥托管（Vault/KMS）、真实 ASR 辅助审核

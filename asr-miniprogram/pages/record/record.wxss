@@ -1,39 +1,261 @@
-.container {
-  padding: 40rpx;
+page {
+  background: #f5f6f8;
 }
-.text-box {
-  background: #fff;
+.page {
+  padding: 24rpx 28rpx 60rpx;
+}
+
+/* 顶部切换条 */
+.switchbar {
+  display: flex;
+  align-items: center;
+  height: 84rpx;
   border-radius: 12rpx;
-  padding: 32rpx;
-  font-size: 32rpx;
+  background: linear-gradient(90deg, #1a8cff, #3aa0ff);
+  box-shadow: 0 6rpx 16rpx rgba(26, 140, 255, 0.25);
+  margin-bottom: 26rpx;
+}
+.sw-arrow {
+  width: 120rpx;
+  text-align: center;
+  color: #fff;
+  font-size: 56rpx;
+  line-height: 1;
+  padding-bottom: 6rpx;
+}
+.sw-arrow.disabled {
+  color: rgba(255, 255, 255, 0.35);
+}
+.sw-count {
+  flex: 1;
+  text-align: center;
+  color: #fff;
+  font-size: 36rpx;
+  font-weight: 600;
+  letter-spacing: 2rpx;
+}
+
+/* 汉语文本 */
+.text-card {
+  background: #fff;
+  border: 2rpx solid #e6e8eb;
+  border-left: 10rpx solid #1a8cff;
+  border-radius: 12rpx;
+  padding: 40rpx 32rpx;
+  margin-bottom: 18rpx;
+}
+.text-main {
+  font-size: 42rpx;
   line-height: 1.6;
-  margin-bottom: 30rpx;
+  color: #1a1a1a;
+  text-align: center;
+  word-break: break-all;
 }
-.status {
-  color: #666;
-  font-size: 26rpx;
-  margin-bottom: 30rpx;
+.text-id {
+  margin-top: 18rpx;
+  text-align: center;
+  font-size: 22rpx;
+  color: #9aa0a6;
 }
-.status.warn {
-  color: #e64340;
+.explain {
+  margin: 0 6rpx 24rpx;
+  font-size: 24rpx;
+  color: #8a9099;
+  line-height: 1.5;
+}
+
+/* 信息条 */
+.info-bar {
+  display: flex;
+  align-items: center;
+  background: #1a8cff;
+  border-radius: 10rpx;
+  padding: 18rpx 22rpx;
+  margin-bottom: 14rpx;
+  color: #fff;
+  font-size: 27rpx;
+}
+.info-ico {
+  margin-right: 12rpx;
+  font-size: 28rpx;
+}
+.info-label {
+  opacity: 0.92;
+  white-space: nowrap;
+}
+.info-val {
+  flex: 1;
+  font-weight: 600;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* 退回原因 / 重录警告 / 中断告警 */
+.reject-bar {
+  background: #fff7e6;
+  color: #a05a00;
+  border-radius: 10rpx;
+  padding: 18rpx 22rpx;
+  margin: 18rpx 0 0;
+  font-size: 25rpx;
+  line-height: 1.5;
+}
+.warn-bar {
+  background: #e64340;
+  color: #fff;
+  border-radius: 10rpx;
+  padding: 18rpx 22rpx;
+  margin: 18rpx 0 0;
+  font-size: 25rpx;
+  line-height: 1.5;
 }
 .alert {
   background: #fff3f3;
   color: #8a3b39;
   border-radius: 10rpx;
-  padding: 20rpx 24rpx;
+  padding: 18rpx 22rpx;
+  margin: 18rpx 0 0;
   font-size: 25rpx;
   line-height: 1.5;
-  margin-bottom: 28rpx;
 }
-.ctrl {
-  margin-bottom: 20rpx;
+
+/* 录音区 */
+.rec-panel {
+  position: relative;
+  margin-top: 24rpx;
+  border-radius: 16rpx;
+  padding: 36rpx 24rpx 30rpx;
+  background: linear-gradient(180deg, #3aa0ff, #1a8cff);
+  box-shadow: 0 8rpx 20rpx rgba(26, 140, 255, 0.28);
+  text-align: center;
 }
-.ctrl.primary {
+.rec-panel.on {
+  background: linear-gradient(180deg, #ff6b6b, #e64340);
+  box-shadow: 0 8rpx 20rpx rgba(230, 67, 64, 0.28);
+}
+.rec-panel.paused {
+  background: linear-gradient(180deg, #ffb020, #f59300);
+  box-shadow: 0 8rpx 20rpx rgba(245, 147, 0, 0.28);
+}
+.rec-timer {
+  color: #fff;
+  font-size: 48rpx;
+  font-weight: 600;
+  letter-spacing: 3rpx;
+  font-variant-numeric: tabular-nums;
+}
+.rec-toast {
+  position: absolute;
+  left: 50%;
+  top: 96rpx;
+  transform: translateX(-50%);
+  background: rgba(40, 40, 40, 0.86);
+  color: #fff;
+  font-size: 26rpx;
+  padding: 14rpx 34rpx;
+  border-radius: 10rpx;
+  z-index: 3;
+  white-space: nowrap;
+}
+.rec-btn-wrap {
+  display: flex;
+  justify-content: center;
+  padding: 26rpx 0 12rpx;
+}
+.rec-ring {
+  width: 220rpx;
+  height: 220rpx;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.22);
+  border: 6rpx solid rgba(255, 255, 255, 0.65);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.rec-ring.recording {
+  background: rgba(255, 255, 255, 0.28);
+}
+.rec-btn {
+  width: 168rpx;
+  height: 168rpx;
+  border-radius: 50%;
+  background: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.15s ease;
+}
+.rec-btn.stop {
+  width: 120rpx;
+  height: 120rpx;
+  border-radius: 24rpx;
+  background: #fff;
+}
+.rec-dot {
+  width: 74rpx;
+  height: 74rpx;
+  border-radius: 50%;
+  background: #1a8cff;
+}
+.rec-square {
+  width: 52rpx;
+  height: 52rpx;
+  border-radius: 10rpx;
+  background: #e64340;
+}
+.rec-label {
+  margin-top: 14rpx;
+  color: #fff;
+  font-size: 28rpx;
+  opacity: 0.95;
+}
+
+/* 状态与操作 */
+.status {
+  margin: 22rpx 6rpx 0;
+  color: #666;
+  font-size: 25rpx;
+  line-height: 1.5;
+}
+.status.warn {
+  color: #e64340;
+}
+.row {
+  display: flex;
+  margin-top: 26rpx;
+}
+.row .btn {
+  flex: 1;
+  margin-top: 0;
+}
+.row .btn + .btn {
+  margin-left: 20rpx;
+}
+.btn {
+  margin-top: 26rpx;
+  border-radius: 12rpx;
+  font-size: 30rpx;
+  line-height: 2.6;
+}
+.btn.ghost {
+  background: #fff;
+  color: #1a8cff;
+  border: 2rpx solid #cfe4ff;
+}
+.btn.ghost::after {
+  border: none;
+}
+.btn.primary {
   background: #07c160;
   color: #fff;
 }
-.ctrl.danger {
-  background: #e64340;
-  color: #fff;
+.btn.primary::after {
+  border: none;
+}
+.tip {
+  text-align: center;
+  color: #999;
+  font-size: 26rpx;
+  padding: 60rpx 0;
 }
