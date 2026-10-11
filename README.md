@@ -236,3 +236,18 @@ dataset.zip
 python video/gen_voiceover.py
 node "$HOME/.workbuddy/skills/project-intro-video/scripts/render-video.js" --config video/config.js --audio-dir video/audio --out video/out/asr-intro.mp4
 ```
+
+## 十一、头像素材
+
+`assets/avatars/` 下 6 张 512×512 成品头像（蓝色科技风，与视频同一套视觉），另附 `_sheet.png` 六宫格总览：
+
+| 文件 | 用途建议 |
+|---|---|
+| `brand-microphone.png` | 小程序头像 / 登录页品牌标（麦克风） |
+| `brand-waveform.png` | 声波柱形标，适合 App 图标、关于页 |
+| `brand-soundwave.png` | 同心声波环，适合启动页、加载动画底图 |
+| `user-collector-female.png` | 采集员默认头像 |
+| `user-collector-male.png` | 采集员默认头像 |
+| `user-reviewer-female.png` | 审核员默认头像 |
+
+重跑：`python tools/prepare_avatars.py`（把 `assets/avatars/` 下的原图裁掉右下角水印并导出 512×512，原始图自动归档到 `_raw/`）。

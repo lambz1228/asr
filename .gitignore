@@ -58,5 +58,8 @@ logs/
 video/audio/
 video/out/*.png
 
+# ---------- 头像素材（保留成品，原始生成图含水印不入库）----------
+assets/avatars/_raw/
+
 # ---------- Agent 工作区（本地记忆，按需保留）----------
 .workbuddy/
