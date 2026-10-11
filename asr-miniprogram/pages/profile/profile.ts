@@ -1,6 +1,7 @@
 import { request } from '../../utils/request'
 import { getMe, logout, wxLogin, routeAfterLogin, isManagerRole } from '../../utils/auth'
 import { openPrivacyContract } from '../../utils/privacy'
+import { goRecordTab, goHomeTab } from '../../utils/nav'
 
 // 进度口径与服务端 app/stats.py 一致：完成率 = 已通过 / 总任务数
 interface Progress {
@@ -100,11 +101,15 @@ Page({
     }
   },
 
-  onGoTasks() {
-    wx.reLaunch({ url: '/pages/tasks/tasks' })
+  // 两个身份共用同一套 tab，这里只做快捷跳转
+  onGoRecord() {
+    goRecordTab()
   },
-  onGoConsole() {
-    wx.reLaunch({ url: '/subpackages/admin/home/home' })
+  onGoHome() {
+    goHomeTab()
+  },
+  onGoReview() {
+    wx.navigateTo({ url: '/subpackages/admin/review/review' })
   },
   onGoConsent() {
     wx.navigateTo({ url: '/pages/consent/consent' })

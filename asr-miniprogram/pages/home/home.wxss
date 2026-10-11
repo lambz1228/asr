@@ -1,0 +1,364 @@
+.page {
+  min-height: 100vh;
+  box-sizing: border-box;
+  padding: 24rpx 20rpx 40rpx;
+  background: #f5f6f8;
+}
+
+/* 顶部问候 */
+.hero {
+  padding: 8rpx 8rpx 20rpx;
+}
+.hero-title {
+  font-size: 42rpx;
+  font-weight: 600;
+  color: #1a1a1a;
+}
+.hero-sub {
+  margin-top: 10rpx;
+  font-size: 24rpx;
+  color: #999;
+  display: flex;
+  align-items: center;
+}
+.role-tag {
+  font-size: 22rpx;
+  padding: 2rpx 14rpx;
+  border-radius: 18rpx;
+  margin-right: 12rpx;
+}
+.role-tag.col {
+  color: #1a8cff;
+  background: #e8f3ff;
+}
+.role-tag.mgr {
+  color: #8a5a00;
+  background: #fff4e0;
+}
+
+/* 合规提醒 */
+.notice {
+  background: #fff8e6;
+  border: 1rpx solid #ffe1a8;
+  border-radius: 14rpx;
+  padding: 22rpx 24rpx;
+  margin-bottom: 20rpx;
+}
+.notice-title {
+  font-size: 27rpx;
+  font-weight: 600;
+  color: #a86b00;
+}
+.notice-body {
+  margin-top: 8rpx;
+  font-size: 23rpx;
+  color: #b8860b;
+}
+
+/* 进度卡片 */
+.progress-card {
+  background: #fff;
+  border-radius: 16rpx;
+  padding: 26rpx 24rpx;
+  margin-bottom: 20rpx;
+  box-shadow: 0 2rpx 10rpx rgba(0, 0, 0, 0.04);
+}
+.progress-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  margin-bottom: 16rpx;
+}
+.progress-title {
+  font-size: 28rpx;
+  font-weight: 600;
+  color: #222;
+}
+.progress-rate {
+  font-size: 24rpx;
+  color: #07c160;
+}
+.bar {
+  height: 14rpx;
+  background: #eee;
+  border-radius: 7rpx;
+  overflow: hidden;
+}
+.bar.slim {
+  height: 10rpx;
+}
+.bar-fill {
+  height: 100%;
+  background: #07c160;
+  border-radius: 7rpx;
+  transition: width 0.3s;
+}
+.progress-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 22rpx;
+  margin-top: 16rpx;
+  font-size: 23rpx;
+  color: #888;
+}
+.progress-meta .ok {
+  color: #07c160;
+}
+.progress-meta .bad {
+  color: #e64340;
+}
+
+/* 主行动按钮 */
+.primary-action {
+  margin: 4rpx 0 8rpx;
+  background: linear-gradient(135deg, #1a8cff, #3aa0ff);
+  color: #fff;
+  font-size: 31rpx;
+  border-radius: 16rpx;
+  line-height: 2.9;
+  box-shadow: 0 8rpx 20rpx rgba(26, 140, 255, 0.22);
+}
+.primary-action::after {
+  border: none;
+}
+
+/* 分组标题 */
+.section-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  margin: 26rpx 8rpx 14rpx;
+}
+.section-title {
+  font-size: 26rpx;
+  color: #666;
+}
+.section-title.standalone {
+  display: block;
+  margin: 26rpx 8rpx 14rpx;
+}
+.section-more {
+  font-size: 23rpx;
+  color: #1a8cff;
+}
+
+/* 任务卡片 */
+.card {
+  background: #fff;
+  border-radius: 14rpx;
+  padding: 24rpx;
+  margin-bottom: 16rpx;
+  box-shadow: 0 2rpx 10rpx rgba(0, 0, 0, 0.04);
+}
+.card-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12rpx;
+}
+.status {
+  font-size: 21rpx;
+  padding: 3rpx 14rpx;
+  border-radius: 16rpx;
+  color: #666;
+  background: #f0f1f3;
+}
+.status.claimed,
+.status.pending {
+  color: #1a8cff;
+  background: #e8f3ff;
+}
+.status.uploading,
+.status.uploaded {
+  color: #d48100;
+  background: #fff4e0;
+}
+.status.approved {
+  color: #07c160;
+  background: #e8f8ef;
+}
+.status.rejected {
+  color: #e64340;
+  background: #ffecec;
+}
+.go {
+  font-size: 23rpx;
+  color: #1a8cff;
+}
+.text {
+  font-size: 30rpx;
+  color: #222;
+  line-height: 1.5;
+}
+.reject {
+  margin-top: 14rpx;
+  padding: 14rpx 18rpx;
+  background: #fff3f3;
+  border-radius: 8rpx;
+  display: flex;
+  flex-direction: column;
+  gap: 6rpx;
+}
+.reject-title {
+  font-size: 22rpx;
+  color: #e64340;
+}
+.reject-body {
+  font-size: 25rpx;
+  color: #8a3b39;
+  line-height: 1.5;
+}
+.pool-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20rpx;
+}
+.pool-card .text {
+  flex: 1;
+  min-width: 0;
+}
+.claim-btn {
+  background: #07c160;
+  color: #fff;
+  flex-shrink: 0;
+}
+.claim-btn::after {
+  border: none;
+}
+
+/* 统计 */
+.stats {
+  display: flex;
+  background: #fff;
+  border-radius: 16rpx;
+  padding: 26rpx 0;
+  box-shadow: 0 2rpx 10rpx rgba(0, 0, 0, 0.04);
+}
+.stat {
+  flex: 1;
+  text-align: center;
+}
+.stat .num {
+  font-size: 40rpx;
+  font-weight: 600;
+  color: #07c160;
+}
+.stat .label {
+  margin-top: 6rpx;
+  font-size: 22rpx;
+  color: #999;
+}
+
+/* 管理入口 */
+.entries {
+  margin-top: 20rpx;
+}
+.entry {
+  display: flex;
+  align-items: center;
+  background: #fff;
+  border-radius: 16rpx;
+  padding: 26rpx 24rpx;
+  margin-bottom: 18rpx;
+  box-shadow: 0 2rpx 10rpx rgba(0, 0, 0, 0.04);
+}
+.entry-ico {
+  width: 72rpx;
+  height: 72rpx;
+  border-radius: 18rpx;
+  color: #fff;
+  font-size: 40rpx;
+  line-height: 72rpx;
+  text-align: center;
+  margin-right: 22rpx;
+  flex-shrink: 0;
+}
+.entry-ico.import {
+  background: #1a8cff;
+}
+.entry-ico.review {
+  background: #07c160;
+}
+.entry-ico.audit {
+  background: #8a6d3b;
+}
+.entry-body {
+  flex: 1;
+  min-width: 0;
+}
+.entry-title {
+  font-size: 30rpx;
+  font-weight: 600;
+  color: #222;
+}
+.entry-desc {
+  margin-top: 6rpx;
+  font-size: 23rpx;
+  color: #999;
+}
+.entry-arrow {
+  color: #ccc;
+  font-size: 36rpx;
+  margin-left: 12rpx;
+}
+
+/* 采集员排行 / 任务包 */
+.col-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  margin-bottom: 12rpx;
+}
+.col-id {
+  font-size: 27rpx;
+  font-weight: 600;
+  color: #222;
+}
+.col-rate {
+  font-size: 23rpx;
+  color: #07c160;
+}
+.col-meta {
+  display: flex;
+  gap: 24rpx;
+  margin-top: 12rpx;
+  font-size: 22rpx;
+  color: #888;
+}
+.col-meta .bad {
+  color: #e64340;
+}
+.card-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  margin-bottom: 14rpx;
+}
+.pkg-name {
+  font-size: 30rpx;
+  font-weight: 600;
+  color: #222;
+}
+.pkg-id {
+  font-size: 22rpx;
+  color: #bbb;
+}
+.meta {
+  display: flex;
+  gap: 28rpx;
+  font-size: 24rpx;
+  color: #666;
+}
+
+.tip {
+  text-align: center;
+  color: #999;
+  font-size: 26rpx;
+  margin: 40rpx 0;
+}
+.tip.small {
+  font-size: 23rpx;
+  color: #b0b4b8;
+  margin: 8rpx 0 0;
+}

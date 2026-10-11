@@ -1,5 +1,6 @@
 import { request } from './request'
 import { getConsentStatus } from './consent'
+import { TAB } from './nav'
 
 // 管理侧角色（可进入管理台：导入任务 / 审核 / 导出）
 export function isManagerRole(role: string): boolean {
@@ -40,18 +41,20 @@ export async function getMe(): Promise<MeResult> {
 
 export type LoginRoute = 'manager' | 'collector'
 
-// 登录后按角色分流（两条独立通路）：
-//   admin / reviewer → 管理台首页（导入任务、审核），不强制签语音同意书
-//   collector 等采集角色 → 未签同意书进同意书页，已签进采集任务页
+// 登录后分流：两个身份进入同一套底部导航（首页 / 学习资源 / 语言采集 / 我的），
+// 首页内容按角色自适应，因此这里不再分成两套入口页。
+//   admin / reviewer → 首页（管理视角，不强制签语音同意书）
+//   collector 等采集角色 → 未签同意书先进同意书页，已签进首页（采集视角）
 // 返回实际分流去向，调用方可据此提示。
 export async function routeAfterLogin(): Promise<LoginRoute> {
   const me = await getMe()
   if (isManagerRole(me.role)) {
-    wx.reLaunch({ url: '/subpackages/admin/home/home' })
+    wx.switchTab({ url: TAB.home })
     return 'manager'
   }
   // 非管理角色一律按采集员处理；语音属敏感个人信息，采集前须单独同意
   const st = await getConsentStatus()
-  wx.reLaunch({ url: st.signed ? '/pages/tasks/tasks' : '/pages/consent/consent' })
+  if (st.signed) wx.switchTab({ url: TAB.home })
+  else wx.reLaunch({ url: '/pages/consent/consent' })
   return 'collector'
 }

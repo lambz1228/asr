@@ -10,6 +10,7 @@ import {
 } from '../../utils/recorder'
 import { saveAndUpload } from '../../utils/uploader'
 import { ensurePrivacyAuthorize, openPrivacyContract } from '../../utils/privacy'
+import { takePendingTask, TAB } from '../../utils/nav'
 
 // 队列中的一条任务（来自 GET /tasks）
 interface QItem {
@@ -40,6 +41,9 @@ Page({
     index: 0,
     total: 0,
     current: null as QItem | null,
+    // 队列为空（无任务可采）时展示空态
+    empty: false,
+    isManager: false,
     // 信息条
     speaker: '',
     // 录音状态
@@ -61,68 +65,115 @@ Page({
   },
   audioCtx: null as any,
   timer: null as any,
+  appHideHandler: null as any,
   initialTaskId: '',
   fallbackText: '',
   fallbackVersion: 0,
 
   onLoad(options: any) {
+    // tab 页进入时无参数；带参数的旧入口（列表页 navigateTo）仍兼容
     this.initialTaskId = options.taskId || ''
     this.fallbackText = decodeURIComponent(options.text || '')
     this.fallbackVersion = Number(options.version || 0)
-    this.loadSpeaker()
-    this.initQueue()
-  },
-
-  // 切后台 / 锁屏视为中断：微信录音在后台不可靠（方案 §3）
-  onHide() {
-    if (this.data.recording) {
-      stopAsInterrupted()
-      this.setData({ statusText: '已切到后台，录音中断' })
+    this.loadIdentity()
+    // 仅「切到后台 / 锁屏」视为中断（微信录音在后台不可靠，方案 §3）；
+    // 切换底部 tab 只隐藏页面、小程序仍在前台，录音可继续，故不按中断处理
+    this.appHideHandler = () => {
+      if (this.data.recording) {
+        stopAsInterrupted()
+        this.setData({ statusText: '已切到后台，录音中断' })
+      }
     }
+    wx.onAppHide(this.appHideHandler)
+  },
+  // 本页是 tab 页：每次回到本页都同步一次队列（录音中不打扰）
+  onShow() {
+    if (this.data.recording) return
+    this.syncQueue()
+  },
+  onPullDownRefresh() {
+    if (this.data.recording) {
+      wx.stopPullDownRefresh()
+      return
+    }
+    this.syncQueue().finally(() => wx.stopPullDownRefresh())
   },
   onUnload() {
     if (this.data.recording) stopRecord()
     this.clearTimer()
     this.stopPlay()
+    if (this.appHideHandler) wx.offAppHide(this.appHideHandler)
   },
 
-  async loadSpeaker() {
+  async loadIdentity() {
     try {
       const me = await getMe()
-      this.setData({ speaker: me.userId || '' })
+      this.setData({
+        speaker: me.userId || '',
+        isManager: me.role === 'admin' || me.role === 'reviewer'
+      })
     } catch {
       this.setData({ speaker: '' })
     }
   },
 
-  // 拉取「我的任务」构建可上下切换的队列，并定位到入口传入的那条
-  async initQueue() {
+  // 同步「我的任务」队列，并定位到需要采集的那一条：
+  //   优先取首页 / 学习资源页跨 tab 传入的待录任务，其次取本页首次进入时的参数
+  async syncQueue() {
+    const pending = takePendingTask()
     this.setData({ loading: true })
     try {
       const res = await request<{ list: QItem[] }>({ url: '/tasks' })
       const list = res.list || []
       if (!list.length) {
         this.setData({ loading: false })
-        this.applyFallback()
+        if (!this.data.queue.length) this.applyFallback()
         return
       }
-      const idx = list.findIndex((x) => x.id === this.initialTaskId)
-      this.setData({ queue: list, total: list.length, loading: false })
+      const current = this.data.current
+      // 首次定位用的入口参数只生效一次，避免后续回到本页反复跳回旧任务
+      const targetId = pending || this.initialTaskId || (current ? current.id : '')
+      this.initialTaskId = ''
+      this.setData({ queue: list, total: list.length, loading: false, empty: false })
+
+      const idx = targetId ? list.findIndex((x) => x.id === targetId) : -1
+      const curIdx = current ? list.findIndex((x) => x.id === current.id) : -1
       if (idx >= 0) {
-        this.applyTask(idx)
+        // 目标就是当前这条时只刷新数据，避免重置已录未提交的音频
+        if (current && current.id === targetId) this.refreshCurrent(idx)
+        else this.applyTask(idx)
+      } else if (curIdx >= 0) {
+        this.refreshCurrent(curIdx)
       } else {
-        this.applyFallback(list)
+        this.applyTask(0)
       }
     } catch (e: any) {
-      this.setData({ loading: false, statusText: '任务加载失败，可下拉重进' })
-      this.applyFallback()
+      this.setData({ loading: false, statusText: '任务加载失败，可下拉重试' })
+      if (!this.data.queue.length) this.applyFallback()
     }
   },
 
-  // 兜底：/tasks 未含该任务（或加载失败）时，用入口参数构造单条队列
+  // 列表数据变化但保留当前选中项与录音状态（如任务被退回后重新拉取）
+  refreshCurrent(i: number) {
+    const item = this.data.queue[i]
+    if (!item) return
+    this.setData({
+      index: i,
+      current: item,
+      replacing: (item.version || 0) > 0,
+      statusText: item.rejectReason ? '该任务曾被退回，请按退回原因重录' : this.data.statusText
+    })
+  },
+
+  // 兜底：/tasks 未含该任务（或加载失败）且由旧入口带参进入时，用参数构造单条队列
   applyFallback(list?: QItem[]) {
     if (list && list.length) {
       this.applyTask(0)
+      return
+    }
+    if (!this.initialTaskId) {
+      // 无任务可采（未分配 / 管理员身份）：展示空态，不构造假任务
+      this.setData({ queue: [], total: 0, current: null, index: 0, empty: true })
       return
     }
     const single: QItem = {
@@ -135,7 +186,7 @@ Page({
       version: this.fallbackVersion,
       rejectReason: null
     }
-    this.setData({ queue: [single], total: 1 })
+    this.setData({ queue: [single], total: 1, empty: false })
     this.applyTask(0)
   },
 
@@ -164,7 +215,6 @@ Page({
         ? '该任务曾被退回，请按退回原因重录'
         : ''
     })
-    wx.setNavigationBarTitle({ title: `录音 ${i + 1}/${this.data.queue.length}` })
   },
 
   // 切换任务前的守卫：录音中禁止切换；已录未提交需二次确认
@@ -359,14 +409,23 @@ Page({
     setTimeout(() => this.setData({ toast: '' }), 1600)
   },
 
-  // 提交成功后：还有下一条就自动切过去（连续采集），否则返回
+  // 提交成功后：还有下一条就自动切过去（连续采集）；否则提示本队列已完成
+  // 本页是 tab 页，不能 navigateBack，改为留在本页并引导回首页看进度
   advanceOrBack() {
     const i = this.data.index
     if (i + 1 < this.data.queue.length) {
       this.applyTask(i + 1)
-    } else {
-      wx.navigateBack()
+      return
     }
+    this.setData({
+      recording: false,
+      statusText: '本队列已全部提交，可在「首页」查看进度与审核结果'
+    })
+    wx.showToast({ title: '本队列已完成', icon: 'none' })
+  },
+
+  onGoHome() {
+    wx.switchTab({ url: TAB.home })
   },
 
   async onSubmit() {

@@ -1,6 +1,7 @@
 <view class="container">
   <view class="title">ASR 音频采集</view>
-  <view class="subtitle">采集员登录后进入录音采集；管理员进入导入任务与审核管理台</view>
+  <view class="subtitle">两个身份共用同一套导航：首页 / 学习资源 / 语言采集 / 我的</view>
+  <view class="subtitle">采集员做录音采集，管理员做导入与审核，页面按角色自适应</view>
 
   <button class="btn-primary login-btn" loading="{{loading}}" bindtap="onLogin">微信登录（采集员）</button>
 

@@ -1,4 +1,6 @@
 {
-  "navigationBarTitleText": "录音采集",
+  "navigationBarTitleText": "语言采集",
+  "enablePullDownRefresh": true,
+  "backgroundTextStyle": "dark",
   "usingComponents": {}
 }

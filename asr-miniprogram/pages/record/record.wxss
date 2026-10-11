@@ -259,3 +259,29 @@ page {
   font-size: 26rpx;
   padding: 60rpx 0;
 }
+
+/* 空态：无可采集任务 */
+.empty {
+  margin-top: 80rpx;
+  text-align: center;
+  padding: 0 40rpx;
+}
+.empty-ico {
+  font-size: 88rpx;
+}
+.empty-title {
+  margin-top: 20rpx;
+  font-size: 32rpx;
+  font-weight: 600;
+  color: #333;
+}
+.empty-desc {
+  margin-top: 14rpx;
+  font-size: 25rpx;
+  color: #9aa0a6;
+  line-height: 1.6;
+}
+.empty .btn {
+  margin-top: 40rpx;
+}
+

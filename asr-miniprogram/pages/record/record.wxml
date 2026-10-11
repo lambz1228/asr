@@ -1,12 +1,22 @@
 <view class="page">
   <!-- 顶部：上一条 / 计数 / 下一条 -->
-  <view class="switchbar">
+  <view wx:if="{{total}}" class="switchbar">
     <view class="sw-arrow {{index <= 0 ? 'disabled' : ''}}" bindtap="onPrev">‹</view>
     <view class="sw-count">{{index + 1}}/{{total}}</view>
     <view class="sw-arrow {{index >= total - 1 ? 'disabled' : ''}}" bindtap="onNext">›</view>
   </view>
 
   <view wx:if="{{loading}}" class="tip">加载中...</view>
+
+  <!-- 空态：没有可采集的任务 -->
+  <view wx:if="{{!loading && empty}}" class="empty">
+    <view class="empty-ico">🎙</view>
+    <view class="empty-title">{{isManager ? '当前身份无需采集' : '暂无可采集任务'}}</view>
+    <view class="empty-desc">
+      {{isManager ? '管理员与审核员在「首页」进入导入 / 审核台' : '等待管理员下发任务，或到「首页 - 公共池」领取'}}
+    </view>
+    <button class="btn primary" bindtap="onGoHome">去首页</button>
+  </view>
 
   <block wx:if="{{current}}">
     <!-- 汉语文本（红框位置） -->

@@ -1,6 +1,7 @@
 import { submitConsent, withdrawConsent, getConsentStatus } from '../../utils/consent'
 import { logout } from '../../utils/auth'
 import { openPrivacyContract, getPrivacySetting } from '../../utils/privacy'
+import { TAB } from '../../utils/nav'
 
 Page({
   data: {
@@ -45,7 +46,7 @@ Page({
       await submitConsent('1.0')
       wx.setStorageSync('consentSigned', true)
       wx.showToast({ title: '已签署同意', icon: 'success' })
-      setTimeout(() => wx.reLaunch({ url: '/pages/tasks/tasks' }), 600)
+      setTimeout(() => wx.switchTab({ url: TAB.home }), 600)
     } catch (e: any) {
       wx.showToast({ title: '提交失败: ' + (e.message || ''), icon: 'none' })
     } finally {

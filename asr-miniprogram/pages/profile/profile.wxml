@@ -24,14 +24,21 @@
     </view>
   </view>
 
-  <!-- 功能入口 -->
+  <!-- 功能入口：两个身份共用同一套底部导航，这里仅提供快捷方式 -->
   <view class="list">
-    <view wx:if="{{isCollector}}" class="item" bindtap="onGoTasks">
-      <text class="item-label">我的任务</text>
+    <view wx:if="{{isCollector}}" class="item" bindtap="onGoRecord">
+      <text class="item-label">开始录音采集</text>
+      <text class="item-desc">前往「语言采集」</text>
       <text class="item-arrow">›</text>
     </view>
-    <view wx:if="{{isManager}}" class="item" bindtap="onGoConsole">
-      <text class="item-label">管理台</text>
+    <view wx:if="{{isManager}}" class="item" bindtap="onGoReview">
+      <text class="item-label">录音审核台</text>
+      <text class="item-desc">试听并判定通过 / 退回</text>
+      <text class="item-arrow">›</text>
+    </view>
+    <view class="item" bindtap="onGoHome">
+      <text class="item-label">我的工作台</text>
+      <text class="item-desc">回到「首页」</text>
       <text class="item-arrow">›</text>
     </view>
     <view wx:if="{{isCollector}}" class="item" bindtap="onGoConsent">

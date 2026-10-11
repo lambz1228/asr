@@ -2,7 +2,8 @@
   "pages": [
     "pages/login/login",
     "pages/consent/consent",
-    "pages/tasks/tasks",
+    "pages/home/home",
+    "pages/resources/resources",
     "pages/record/record",
     "pages/profile/profile"
   ],
@@ -10,13 +11,44 @@
     {
       "root": "subpackages/admin",
       "pages": [
-        "home/home",
         "import/import",
         "review/review",
         "audit/audit"
       ]
     }
   ],
+  "tabBar": {
+    "color": "#9aa0a6",
+    "selectedColor": "#1a8cff",
+    "backgroundColor": "#ffffff",
+    "borderStyle": "black",
+    "list": [
+      {
+        "pagePath": "pages/home/home",
+        "text": "首页",
+        "iconPath": "images/tabbar/home.png",
+        "selectedIconPath": "images/tabbar/home-on.png"
+      },
+      {
+        "pagePath": "pages/resources/resources",
+        "text": "学习资源",
+        "iconPath": "images/tabbar/resources.png",
+        "selectedIconPath": "images/tabbar/resources-on.png"
+      },
+      {
+        "pagePath": "pages/record/record",
+        "text": "语言采集",
+        "iconPath": "images/tabbar/record.png",
+        "selectedIconPath": "images/tabbar/record-on.png"
+      },
+      {
+        "pagePath": "pages/profile/profile",
+        "text": "我的",
+        "iconPath": "images/tabbar/mine.png",
+        "selectedIconPath": "images/tabbar/mine-on.png"
+      }
+    ]
+  },
   "window": {
     "navigationBarBackgroundColor": "#ffffff",
     "navigationBarTitleText": "ASR 采集",

@@ -6,7 +6,7 @@ Page({
     const token = wx.getStorageSync('token')
     if (token) this.route()
   },
-  // 按角色分流：管理员 → 管理台；采集员 → 同意书 / 采集任务页
+  // 按角色分流：两个身份都进入统一首页 tab，内容按角色自适应
   async route() {
     try {
       await routeAfterLogin()
@@ -19,7 +19,7 @@ Page({
   async onLogin() {
     await this.doLogin()
   },
-  // 本地演示用：以管理员身份登录，便于进入管理台（导入任务 / 审核）
+  // 本地演示用：以管理员身份登录，直接查看管理视角的首页（导入 / 审核入口）
   async onLoginAsAdmin() {
     await this.doLogin('admin')
   },
