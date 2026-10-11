@@ -137,7 +137,10 @@ async def process_upload(raw_bytes: bytes, ext: str) -> dict:
         await transcode_to_wav(src, dst)  # 保留原始采样率
         with open(dst, "rb") as f:
             result["wav_bytes"] = f.read()
-        result["metrics"] = analyze_wav(dst)
+        # analyze_wav 是纯 Python 的逐样本循环（受 GIL 约束），必须放到线程池执行。
+        # 直接 await 调用会占住事件循环：实测 44.1kHz/60s 需 0.5s，48kHz/300s 需 2.6s，
+        # 这期间整个服务（所有人的所有请求）都被冻住。20 人同时上传时表现为集体卡顿。
+        result["metrics"] = await asyncio.to_thread(analyze_wav, dst)
         result["quality_flags"] = quality_flags(result["metrics"])
         result["transcode_status"] = "done"
     except Exception as e:  # ffmpeg 缺失或解析失败不应中断上传

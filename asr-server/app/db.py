@@ -1,11 +1,34 @@
 """异步数据库引擎与会话工厂。生产使用 asyncpg；开发默认 SQLite+aiosqlite。"""
-from sqlalchemy import inspect
+from sqlalchemy import event, inspect
 from sqlalchemy.ext.asyncio import create_async_engine, async_sessionmaker
 
 from .config import settings
 from . import models
 
-engine = create_async_engine(settings.database_url, echo=False, future=True)
+_is_sqlite = settings.database_url.startswith("sqlite")
+
+# SQLite 并发参数：多人同时上传时，写事务会互相排队。
+#  - timeout: aiosqlite 等待锁释放的秒数，超时前不会直接抛 "database is locked"
+#  - journal_mode=WAL: 读写不再互斥（默认的 delete 模式下写会阻塞所有读）
+#  - busy_timeout: 同上，驱动层的兜底等待
+#  - synchronous=NORMAL: WAL 下的推荐值，兼顾安全与写入速度
+_connect_args = {"timeout": 30} if _is_sqlite else {}
+
+engine = create_async_engine(
+    settings.database_url, echo=False, future=True, connect_args=_connect_args
+)
+
+if _is_sqlite:
+
+    @event.listens_for(engine.sync_engine, "connect")
+    def _set_sqlite_pragmas(dbapi_conn, _record):  # pragma: no cover - 驱动回调
+        cur = dbapi_conn.cursor()
+        cur.execute("PRAGMA journal_mode=WAL")
+        cur.execute("PRAGMA synchronous=NORMAL")
+        cur.execute("PRAGMA busy_timeout=30000")
+        cur.close()
+
+
 SessionLocal = async_sessionmaker(engine, expire_on_commit=False)
 
 # 轻量向前兼容迁移：create_all 只会建新表，不会给「已存在的表」补列。

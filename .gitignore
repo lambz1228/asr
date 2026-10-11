@@ -24,6 +24,14 @@ env/
 *.sqlite
 *.sqlite3
 asr.db
+# 开启 WAL 后 SQLite 会生成 -wal / -shm 侧车文件，同样不入库
+*.db-wal
+*.db-shm
+*.db-journal
+*.sqlite-wal
+*.sqlite-shm
+*.sqlite3-wal
+*.sqlite3-shm
 
 # 上传的音频 / 转码产物 / 导出包（对象存储本地后端目录）
 asr-server/data/

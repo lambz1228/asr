@@ -24,6 +24,14 @@ os.environ["DEV_MOCK_LOGIN"] = "true"
 os.environ["SEED_DEMO"] = "true"
 os.environ["FFMPEG_ENABLED"] = "false"
 
+# 每次从干净库开始，避免重复运行导致任务累积。
+# 注意：WAL 模式下 SQLite 还会生成 -wal / -shm 侧车文件，必须一并删除，
+# 否则残留的 WAL 会把上一次的写入带回来，表现为难以复现的假失败。
+for _suf in ("", "-wal", "-shm", "-journal"):
+    _p = os.path.join(SERVER, "_smoke_reviewer.db" + _suf)
+    if os.path.exists(_p):
+        os.remove(_p)
+
 from fastapi.testclient import TestClient  # noqa: E402
 
 from main import app  # noqa: E402

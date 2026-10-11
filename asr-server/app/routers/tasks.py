@@ -1,5 +1,5 @@
 from fastapi import APIRouter, Depends
-from sqlalchemy import func, select
+from sqlalchemy import func, select, update
 
 from .. import models
 from ..deps import get_current_user, get_db, record_audit
@@ -119,6 +119,32 @@ async def list_pool(user=Depends(get_current_user), db=Depends(get_db)):
 
 @router.post("/tasks/{task_id}/claim")
 async def claim_task(task_id: str, user=Depends(get_current_user), db=Depends(get_db)):
+    """抢领任务（并发安全）。
+
+    用「带条件的原子 UPDATE」而非「先 SELECT 判断、再赋值」：
+    后者在多人同时抢领时，多个请求会同时读到 status == 'pending'，
+    于是都判定自己领到了 —— 实测 20 人并发抢同一个任务，会有十几个人
+    收到 claimed=True，而库里的 assignee 被反复覆盖，最终只有一个赢家。
+    调用方按 claimed=True 去录，实际任务并不属于他。
+
+    这里把状态判断下推给数据库：WHERE status='pending' 保证只有一行被更新，
+    再按 rowcount 判断是否真的抢到。
+    """
+    res = await db.execute(
+        update(models.TaskAssignment)
+        .where(
+            models.TaskAssignment.assignment_id == task_id,
+            models.TaskAssignment.status == "pending",
+        )
+        .values(status="claimed", assignee=user["uid"])
+    )
+    if res.rowcount == 1:
+        record_audit(db, user["uid"], "collector", "claim", "assignment", task_id)
+        await db.commit()
+        return ok({"status": "claimed", "claimed": True})
+
+    # 没抢到：可能是任务不存在，也可能是已被别人领走
+    await db.rollback()
     asg = await db.scalar(
         select(models.TaskAssignment).where(
             models.TaskAssignment.assignment_id == task_id
@@ -126,11 +152,4 @@ async def claim_task(task_id: str, user=Depends(get_current_user), db=Depends(ge
     )
     if not asg:
         return {"code": 1, "message": "任务不存在", "data": None}
-    # 抢领模式乐观锁：仅当仍处于 pending 时原子领取
-    if asg.status != "pending":
-        return ok({"status": asg.status, "claimed": False})
-    asg.status = "claimed"
-    asg.assignee = user["uid"]
-    record_audit(db, user["uid"], "collector", "claim", "assignment", task_id)
-    await db.commit()
-    return ok({"status": "claimed", "claimed": True})
+    return ok({"status": asg.status, "claimed": False})
