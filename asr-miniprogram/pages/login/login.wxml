@@ -1,10 +1,59 @@
-<view class="container">
-  <view class="title">ASR 音频采集</view>
-  <view class="subtitle">两个身份共用同一套导航：首页 / 学习资源 / 语言采集 / 我的</view>
-  <view class="subtitle">采集员做录音采集，管理员做导入与审核，页面按角色自适应</view>
+<view class="page">
+  <view class="bg-blob bg1"></view>
+  <view class="bg-blob bg2"></view>
+  <view class="bg-blob bg3"></view>
 
-  <button class="btn-primary login-btn" loading="{{loading}}" bindtap="onLogin">微信登录（采集员）</button>
+  <!-- 品牌 -->
+  <view class="brand">
+    <view class="logo">
+      <view class="logo-mic"></view>
+      <view class="logo-stand"></view>
+    </view>
+    <view class="title">ASR 语音采集</view>
+    <view class="subtitle">管理员与采集员共用同一套导航</view>
+  </view>
 
-  <view class="dev-tip">本地开发：可切换角色登录</view>
-  <button class="btn-plain admin-btn" loading="{{loading}}" bindtap="onLoginAsAdmin">管理员登录（演示）</button>
+  <!-- 底部导航预览 -->
+  <view class="tabs">
+    <view class="tab-chip">首页</view>
+    <view class="tab-chip">学习资源</view>
+    <view class="tab-chip active">语言采集</view>
+    <view class="tab-chip">我的</view>
+  </view>
+
+  <!-- 能力卡片 -->
+  <view class="card">
+    <view class="feat">
+      <view class="feat-ico blue">◉</view>
+      <view class="feat-body">
+        <view class="feat-t">录音采集</view>
+        <view class="feat-d">照文本逐句朗读并提交</view>
+      </view>
+    </view>
+    <view class="feat">
+      <view class="feat-ico green">✓</view>
+      <view class="feat-body">
+        <view class="feat-t">审核与导出</view>
+        <view class="feat-d">试听判定通过 / 退回，导出数据集</view>
+      </view>
+    </view>
+    <view class="feat">
+      <view class="feat-ico violet">＋</view>
+      <view class="feat-body">
+        <view class="feat-t">任务导入</view>
+        <view class="feat-d">Excel 两列（序号 + 汉语文本）统一下发</view>
+      </view>
+    </view>
+  </view>
+
+  <button class="login-btn" hover-class="login-press" loading="{{loading}}" bindtap="onLogin">
+    微信登录（采集员）
+  </button>
+
+  <view class="dev-tip">本地开发 · 可切换角色登录</view>
+  <button class="admin-btn" hover-class="login-press" loading="{{loading}}" bindtap="onLoginAsAdmin">
+    管理员登录（演示）
+  </button>
+
+  <view class="footer">登录后按账号角色自动进入对应工作台</view>
 </view>

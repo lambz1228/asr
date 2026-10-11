@@ -1,4 +1,4 @@
-<view class="page">
+<view class="page stagger">
   <view class="tabs">
     <view class="tab {{mode==='paste'?'on':''}}" data-m="paste" bindtap="switchMode">粘贴文本</view>
     <view class="tab {{mode==='file'?'on':''}}" data-m="file" bindtap="switchMode">上传文件</view>
@@ -67,7 +67,7 @@
       bindinput="onInput"
       maxlength="-1"
     />
-    <button class="submit" loading="{{loading}}" bindtap="onSubmitPaste">导入并下发</button>
+    <button class="submit" hover-class="press" loading="{{loading}}" bindtap="onSubmitPaste">导入并下发</button>
   </block>
 
   <!-- 方式二：上传文件 -->
@@ -77,7 +77,7 @@
       <view class="file-name">{{fileName || '点击选择 Excel / CSV / JSON 文件'}}</view>
       <view class="file-tip">从聊天记录中选取（可先发到「文件传输助手」）</view>
     </view>
-    <button class="submit" loading="{{loading}}" bindtap="onSubmitFile">上传并下发</button>
+    <button class="submit" hover-class="press" loading="{{loading}}" bindtap="onSubmitFile">上传并下发</button>
   </block>
 
   <!-- 导入结果 -->

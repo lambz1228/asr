@@ -1,62 +1,102 @@
-<view class="page">
-  <!-- 顶部问候：两个身份共用，仅副标题不同 -->
+<view class="page stagger">
+  <!-- ==================== 顶部问候 · 两个身份共用 ==================== -->
   <view class="hero">
-    <view class="hero-title">{{greeting}}<text wx:if="{{userId}}">，{{userId}}</text></view>
-    <view class="hero-sub">
-      <text class="role-tag {{isManager ? 'mgr' : 'col'}}">{{roleText}}</text>
-      <text>· 语音采集工作台</text>
+    <view class="hero-blob hero-blob1"></view>
+    <view class="hero-blob hero-blob2"></view>
+    <view class="hero-row">
+      <view class="hero-main">
+        <view class="hero-hi">{{greeting}}<text wx:if="{{userId}}">，{{userId}}</text></view>
+        <view class="hero-sub">
+          <text class="role-tag">{{roleText}}</text>
+          <text class="hero-hint">{{isManager ? '导入 · 审核 · 导出' : '朗读 · 录音 · 提交'}}</text>
+        </view>
+      </view>
+      <view class="hero-avatar">{{initial || '?'}}</view>
     </view>
   </view>
 
   <!-- ==================== 采集员 ==================== -->
   <block wx:if="{{isCollector}}">
-    <view wx:if="{{!consentSigned}}" class="notice" bindtap="onGoConsent">
-      <view class="notice-title">尚未签署《语音信息同意书》</view>
-      <view class="notice-body">未签署前录音上传会被拦截，点击前往签署 ›</view>
+    <view
+      wx:if="{{!consentSigned}}"
+      class="notice"
+      hover-class="press"
+      hover-stay-time="60"
+      bindtap="onGoConsent"
+    >
+      <view class="notice-ico">!</view>
+      <view class="notice-body">
+        <view class="notice-title">尚未签署《语音信息同意书》</view>
+        <view class="notice-desc">未签署前录音上传会被拦截，点击前往签署</view>
+      </view>
+      <view class="notice-arrow">›</view>
     </view>
 
     <!-- 我的进度 -->
-    <view wx:if="{{progress && progress.total}}" class="progress-card">
-      <view class="progress-head">
-        <text class="progress-title">我的进度</text>
-        <text class="progress-rate">{{progress.approved}}/{{progress.total}} 已通过 · {{percent}}%</text>
+    <view wx:if="{{progress && progress.total}}" class="card pcard">
+      <view class="pc-head">
+        <text class="pc-title">我的进度</text>
+        <text class="pc-sub">{{progress.approved}} / {{progress.total}} 已通过</text>
       </view>
-      <view class="bar"><view class="bar-fill" style="width:{{percent}}%"></view></view>
-      <view class="progress-meta">
-        <text>待录 {{progress.pending}}</text>
-        <text>待审 {{progress.uploaded}}</text>
-        <text class="ok">已通过 {{progress.approved}}</text>
-        <text class="{{progress.rejected ? 'bad' : ''}}">已退回 {{progress.rejected}}</text>
+      <view class="pc-body">
+        <view class="pc-num">{{percent}}<text class="pc-unit">%</text></view>
+        <view class="pc-right">
+          <view class="bar"><view class="bar-fill" style="width:{{percent}}%"></view></view>
+          <view class="chips">
+            <text class="chip">待录 {{progress.pending}}</text>
+            <text class="chip">待审 {{progress.uploaded}}</text>
+            <text class="chip ok">已通过 {{progress.approved}}</text>
+            <text class="chip {{progress.rejected ? 'bad' : ''}}">已退回 {{progress.rejected}}</text>
+          </view>
+        </view>
       </view>
     </view>
 
-    <button class="primary-action" bindtap="onStartRecord">开始录音采集</button>
+    <button class="start-btn" hover-class="start-btn-press" bindtap="onStartRecord">
+      <text class="start-ico">◉</text>
+      <text>开始录音采集</text>
+    </button>
 
     <!-- 我的任务 -->
-    <view class="section-head">
-      <text class="section-title">我的任务{{pendingCount ? '（待处理 ' + pendingCount + ' 条）' : ''}}</text>
+    <view class="sec-head">
+      <view class="sec-title">
+        <view class="sec-bar"></view>
+        <text>我的任务</text>
+        <text wx:if="{{pendingCount}}" class="sec-badge">{{pendingCount}}</text>
+      </view>
       <text
         wx:if="{{tasks.length > pendingCount}}"
-        class="section-more"
+        class="sec-more"
         bindtap="onToggleTasks"
       >{{showAllTasks ? '只看待处理' : '全部 ' + tasks.length + ' 条 ›'}}</text>
     </view>
+
     <view
       wx:for="{{visibleTasks}}"
       wx:key="id"
-      class="card"
+      class="card task"
+      hover-class="press"
+      hover-stay-time="60"
       data-id="{{item.id}}"
       bindtap="onTapTask"
     >
-      <view class="card-top">
-        <text class="status {{item.status}}">{{statusText[item.status] || item.status}}</text>
-        <text class="go">去录音 ›</text>
+      <view class="task-bar {{item.status}}"></view>
+      <view class="task-body">
+        <view class="task-top">
+          <text class="status {{item.status}}">{{statusText[item.status] || item.status}}</text>
+          <text class="go">去录音 ›</text>
+        </view>
+        <view class="task-text">{{item.text}}</view>
+        <view wx:if="{{item.status === 'rejected'}}" class="reject">
+          <text class="reject-title">退回原因</text>
+          <text class="reject-text">{{item.rejectReason || '未填写'}}，请点击重录</text>
+        </view>
       </view>
-      <view class="text">{{item.text}}</view>
-      <view wx:if="{{item.status === 'rejected'}}" class="reject">
-        <text class="reject-title">退回原因</text>
-        <text class="reject-body">{{item.rejectReason || '未填写'}}，请点击重录</text>
-      </view>
+    </view>
+
+    <view wx:if="{{loading}}" class="sk-wrap">
+      <view class="sk sk-card"></view>
+      <view class="sk sk-card"></view>
     </view>
     <view wx:if="{{!loading && !visibleTasks.length}}" class="tip">暂无待处理任务</view>
     <view wx:if="{{restCount}}" class="tip small">
@@ -65,11 +105,22 @@
 
     <!-- 公共池 -->
     <block wx:if="{{poolTotal}}">
-      <view class="section-title standalone">公共池（可领取 {{poolTotal}} 条）</view>
-      <view wx:for="{{poolPreview}}" wx:key="id" class="card pool-card">
-        <view class="text">{{item.text}}</view>
+      <view class="sec-head">
+        <view class="sec-title">
+          <view class="sec-bar green"></view>
+          <text>公共池</text>
+        </view>
+        <text class="sec-more">可领取 {{poolTotal}} 条</text>
+      </view>
+      <view
+        wx:for="{{poolPreview}}"
+        wx:key="id"
+        class="card pool"
+      >
+        <view class="pool-text">{{item.text}}</view>
         <button
           class="claim-btn"
+          hover-class="start-btn-press"
           size="mini"
           loading="{{claiming === item.id}}"
           data-id="{{item.id}}"
@@ -80,59 +131,65 @@
     </block>
   </block>
 
-  <!-- ============ 管理员 / 审核员 ============ -->
+  <!-- ==================== 管理员 / 审核员 ==================== -->
   <block wx:else>
-    <!-- 全局采集进度 -->
-    <view class="progress-card">
-      <view class="progress-head">
-        <text class="progress-title">采集完成率</text>
-        <text class="progress-rate">{{overall.approved || 0}}/{{overall.total || 0}} · {{overallPercent}}%</text>
+    <!-- 全局采集完成率 -->
+    <view class="card pcard">
+      <view class="pc-head">
+        <text class="pc-title">采集完成率</text>
+        <text class="pc-sub">{{overall.approved || 0}} / {{overall.total || 0}}</text>
       </view>
-      <view class="bar"><view class="bar-fill" style="width:{{overallPercent}}%"></view></view>
-      <view class="progress-meta">
-        <text>待录 {{overall.pending || 0}}</text>
-        <text>待审 {{overall.uploaded || 0}}</text>
-        <text class="ok">已通过 {{overall.approved || 0}}</text>
-        <text class="{{overall.rejected ? 'bad' : ''}}">已退回 {{overall.rejected || 0}}</text>
-        <text>公共池 {{poolCount}}</text>
+      <view class="pc-body">
+        <view class="pc-num">{{overallPercent}}<text class="pc-unit">%</text></view>
+        <view class="pc-right">
+          <view class="bar"><view class="bar-fill" style="width:{{overallPercent}}%"></view></view>
+          <view class="chips">
+            <text class="chip">待录 {{overall.pending || 0}}</text>
+            <text class="chip">待审 {{overall.uploaded || 0}}</text>
+            <text class="chip ok">已通过 {{overall.approved || 0}}</text>
+            <text class="chip {{overall.rejected ? 'bad' : ''}}">已退回 {{overall.rejected || 0}}</text>
+            <text class="chip">公共池 {{poolCount}}</text>
+          </view>
+        </view>
       </view>
     </view>
 
+    <!-- 三宫格统计 -->
     <view class="stats">
       <view class="stat">
-        <view class="num">{{overall.uploaded || 0}}</view>
-        <view class="label">待审核</view>
+        <view class="stat-num amber">{{overall.uploaded || 0}}</view>
+        <view class="stat-label">待审核</view>
       </view>
       <view class="stat">
-        <view class="num">{{overall.recorded || 0}}</view>
-        <view class="label">已采集</view>
+        <view class="stat-num blue">{{overall.recorded || 0}}</view>
+        <view class="stat-label">已采集</view>
       </view>
       <view class="stat">
-        <view class="num">{{overall.total || 0}}</view>
-        <view class="label">总任务</view>
+        <view class="stat-num">{{overall.total || 0}}</view>
+        <view class="stat-label">总任务</view>
       </view>
     </view>
 
     <!-- 管理入口 -->
     <view class="entries">
-      <view wx:if="{{isAdmin}}" class="entry" bindtap="onImport">
-        <view class="entry-ico import">＋</view>
+      <view wx:if="{{isAdmin}}" class="entry" hover-class="press" hover-stay-time="60" bindtap="onImport">
+        <view class="entry-ico ico-blue">＋</view>
         <view class="entry-body">
           <view class="entry-title">导入任务</view>
-          <view class="entry-desc">上传 Excel/CSV 或粘贴文本，统一下发给采集员</view>
+          <view class="entry-desc">上传 Excel / CSV 或粘贴文本，统一下发给采集员</view>
         </view>
         <view class="entry-arrow">›</view>
       </view>
-      <view class="entry" bindtap="onReview">
-        <view class="entry-ico review">✓</view>
+      <view class="entry" hover-class="press" hover-stay-time="60" bindtap="onReview">
+        <view class="entry-ico ico-green">✓</view>
         <view class="entry-body">
           <view class="entry-title">录音审核</view>
           <view class="entry-desc">试听录音，通过或退回{{overall.uploaded ? '（' + overall.uploaded + ' 条待审）' : ''}}</view>
         </view>
         <view class="entry-arrow">›</view>
       </view>
-      <view wx:if="{{isAdmin}}" class="entry" bindtap="onAudit">
-        <view class="entry-ico audit">≡</view>
+      <view wx:if="{{isAdmin}}" class="entry" hover-class="press" hover-stay-time="60" bindtap="onAudit">
+        <view class="entry-ico ico-violet">≡</view>
         <view class="entry-body">
           <view class="entry-title">审计日志</view>
           <view class="entry-desc">查看导入 / 审核 / 导出记录，清理过期导出包</view>
@@ -142,42 +199,52 @@
     </view>
 
     <!-- 采集员排行 -->
-    <view wx:if="{{allCollectors.length}}">
-      <view class="section-head">
-        <text class="section-title">采集员进度</text>
-        <text wx:if="{{allCollectors.length > 5}}" class="section-more" bindtap="onToggleCollectors">
+    <block wx:if="{{allCollectors.length}}">
+      <view class="sec-head">
+        <view class="sec-title">
+          <view class="sec-bar"></view>
+          <text>采集员进度</text>
+        </view>
+        <text wx:if="{{allCollectors.length > 5}}" class="sec-more" bindtap="onToggleCollectors">
           {{showAllCollectors ? '收起' : '全部 ' + allCollectors.length + ' 人 ›'}}
         </text>
       </view>
-      <view class="card" wx:for="{{showAllCollectors ? allCollectors : topCollectors}}" wx:key="userId">
-        <view class="col-head">
-          <text class="col-id">{{item.userId}}</text>
-          <text class="col-rate">{{item.approved}}/{{item.total}} · {{item.percent}}%</text>
+      <view class="card rank" wx:for="{{showAllCollectors ? allCollectors : topCollectors}}" wx:key="userId">
+        <view class="rank-top">
+          <text class="rank-id">{{item.userId}}</text>
+          <text class="rank-rate">{{item.approved}}/{{item.total}} · {{item.percent}}%</text>
         </view>
         <view class="bar slim"><view class="bar-fill" style="width:{{item.percent}}%"></view></view>
-        <view class="col-meta">
-          <text>待录 {{item.pending}}</text>
-          <text>待审 {{item.uploaded}}</text>
-          <text class="{{item.rejected ? 'bad' : ''}}">退回 {{item.rejected}}</text>
+        <view class="chips">
+          <text class="chip">待录 {{item.pending}}</text>
+          <text class="chip">待审 {{item.uploaded}}</text>
+          <text class="chip {{item.rejected ? 'bad' : ''}}">退回 {{item.rejected}}</text>
         </view>
       </view>
-    </view>
+    </block>
 
     <!-- 任务包（仅管理员） -->
     <block wx:if="{{isAdmin}}">
-      <view class="section-title standalone">任务包</view>
-      <view wx:if="{{loading}}" class="tip">加载中...</view>
+      <view class="sec-head">
+        <view class="sec-title">
+          <view class="sec-bar violet"></view>
+          <text>任务包</text>
+        </view>
+      </view>
+      <view wx:if="{{loading}}" class="sk-wrap">
+        <view class="sk sk-card"></view>
+      </view>
       <view wx:elif="{{pkgs.length === 0}}" class="tip">暂无任务包，去「导入任务」创建一个</view>
       <block wx:else>
-        <view class="card" wx:for="{{pkgs}}" wx:key="pkgId">
-          <view class="card-head">
+        <view class="card pkg" wx:for="{{pkgs}}" wx:key="pkgId">
+          <view class="pkg-top">
             <text class="pkg-name">{{item.name}}</text>
             <text class="pkg-id">{{item.pkgId}}</text>
           </view>
-          <view class="meta">
-            <text>文本 {{item.texts}}</text>
-            <text>任务 {{item.assignments}}</text>
-            <text>待录 {{item.pending}}</text>
+          <view class="chips">
+            <text class="chip">文本 {{item.texts}}</text>
+            <text class="chip">任务 {{item.assignments}}</text>
+            <text class="chip amber">待录 {{item.pending}}</text>
           </view>
         </view>
       </block>

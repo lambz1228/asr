@@ -185,3 +185,74 @@
   padding: 8rpx 14rpx;
   border-radius: 10rpx;
 }
+
+/* ============ 统一视觉主题：与底部导航一致的圆角 / 阴影 / 品牌色 ============ */
+.page {
+  background: var(--bg);
+}
+.tabs {
+  border-radius: var(--r-lg);
+  box-shadow: var(--sd);
+  padding: 10rpx;
+}
+.tab {
+  border-radius: var(--r-md);
+  color: var(--t2);
+  transition: background 0.25s var(--ease), color 0.25s var(--ease);
+}
+.tab.on {
+  background: linear-gradient(135deg, #2b8cff, #58b6ff);
+  box-shadow: 0 8rpx 20rpx rgba(26, 140, 255, 0.28);
+  font-weight: 600;
+}
+.form,
+.card,
+.textarea,
+.file-picker,
+.result {
+  background: var(--card);
+  border-radius: var(--r-lg);
+  box-shadow: var(--sd);
+}
+.label {
+  color: var(--t3);
+  font-size: 23rpx;
+}
+.input,
+.picker,
+.user-name,
+.file-name {
+  color: var(--t1);
+}
+.card-title,
+.result-title {
+  color: var(--t1);
+}
+.result-title {
+  color: var(--green);
+}
+.link {
+  color: var(--brand);
+}
+.hint {
+  color: var(--t3);
+}
+.file-picker {
+  border: 2rpx dashed #cbd5e1;
+}
+.err {
+  border-radius: var(--r-sm);
+}
+.submit {
+  height: 96rpx;
+  line-height: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--r-lg);
+  font-size: 31rpx;
+  font-weight: 600;
+  background: linear-gradient(135deg, #20d47a, #07c160);
+  box-shadow: 0 12rpx 28rpx rgba(7, 193, 96, 0.28);
+  transition: transform 0.16s var(--ease);
+}

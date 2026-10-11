@@ -1,15 +1,25 @@
-<view class="page">
+<view class="page stagger">
+  <!-- ==================== 顶部 ==================== -->
   <view class="hero">
-    <view class="hero-title">学习资源</view>
-    <view class="hero-sub">
-      <text class="role-tag {{isManager ? 'mgr' : 'col'}}">{{roleText}}</text>
-      <text>· 采集规范与朗读素材</text>
+    <view class="hero-blob hero-blob1"></view>
+    <view class="hero-blob hero-blob2"></view>
+    <view class="hero-row">
+      <view class="hero-main">
+        <view class="hero-hi">学习资源</view>
+        <view class="hero-sub">
+          <text class="role-tag">{{roleText}}</text>
+          <text class="hero-hint">{{isManager ? '导入格式 · 审核要点' : '录音规范 · 朗读素材'}}</text>
+        </view>
+      </view>
+      <view class="hero-emoji">📖</view>
     </view>
   </view>
 
-  <!-- 录音规范 -->
-  <view class="section-title">录音规范</view>
-  <view class="rule-grid">
+  <!-- ==================== 录音规范 ==================== -->
+  <view class="sec-head">
+    <view class="sec-title"><view class="sec-bar"></view><text>录音规范</text></view>
+  </view>
+  <view class="rules">
     <view class="rule" wx:for="{{rules}}" wx:key="title">
       <view class="rule-ico">{{item.icon}}</view>
       <view class="rule-title">{{item.title}}</view>
@@ -17,42 +27,54 @@
     </view>
   </view>
 
-  <!-- 采集前自检 -->
-  <view class="section-title">采集前自检</view>
-  <view class="card">
-    <block wx:if="{{isCollector}}">
-      <view class="check-row" bindtap="onGoConsent">
-        <text class="check-dot {{consentSigned ? 'ok' : 'todo'}}">{{consentSigned ? '✓' : '!'}}</text>
-        <view class="check-body">
-          <view class="check-title">《语音信息同意书》</view>
-          <view class="check-desc">{{consentSigned ? '已签署，可正常上传' : '未签署，上传会被拦截，点击前往签署'}}</view>
-        </view>
-        <text class="check-arrow">›</text>
+  <!-- ==================== 采集前自检 ==================== -->
+  <view class="sec-head">
+    <view class="sec-title"><view class="sec-bar green"></view><text>采集前自检</text></view>
+  </view>
+  <view class="list">
+    <view
+      wx:if="{{isCollector}}"
+      class="row"
+      hover-class="row-press"
+      hover-stay-time="60"
+      bindtap="onGoConsent"
+    >
+      <text class="dot {{consentSigned ? 'ok' : 'todo'}}">{{consentSigned ? '✓' : '!'}}</text>
+      <view class="row-body">
+        <view class="row-title">《语音信息同意书》</view>
+        <view class="row-desc">{{consentSigned ? '已签署，可正常上传' : '未签署，上传会被拦截，点击前往签署'}}</view>
       </view>
-    </block>
-    <view class="check-row" bindtap="onPrivacy">
-      <text class="check-dot ok">?</text>
-      <view class="check-body">
-        <view class="check-title">微信《用户隐私保护指引》</view>
-        <view class="check-desc">录音前需通过微信平台隐私授权，点击查看协议</view>
-      </view>
-      <text class="check-arrow">›</text>
+      <text class="row-arrow">›</text>
     </view>
-    <view wx:if="{{isManager}}" class="check-row" bindtap="onReview">
-      <text class="check-dot ok">✓</text>
-      <view class="check-body">
-        <view class="check-title">录音审核台</view>
-        <view class="check-desc">试听并判定通过 / 退回，退回原因会回显给采集员</view>
+    <view class="row" hover-class="row-press" hover-stay-time="60" bindtap="onPrivacy">
+      <text class="dot info">?</text>
+      <view class="row-body">
+        <view class="row-title">微信《用户隐私保护指引》</view>
+        <view class="row-desc">录音前需通过微信平台隐私授权，点击查看协议</view>
       </view>
-      <text class="check-arrow">›</text>
+      <text class="row-arrow">›</text>
+    </view>
+    <view
+      wx:if="{{isManager}}"
+      class="row"
+      hover-class="row-press"
+      hover-stay-time="60"
+      bindtap="onReview"
+    >
+      <text class="dot ok">✓</text>
+      <view class="row-body">
+        <view class="row-title">录音审核台</view>
+        <view class="row-desc">试听并判定通过 / 退回，退回原因会回显给采集员</view>
+      </view>
+      <text class="row-arrow">›</text>
     </view>
   </view>
 
-  <!-- 文本库（采集员） -->
+  <!-- ==================== 文本库（采集员） ==================== -->
   <block wx:if="{{isCollector}}">
-    <view class="section-head">
-      <text class="section-title">我的文本库</text>
-      <text class="section-more">{{filtered.length}}/{{texts.length}} 条</text>
+    <view class="sec-head">
+      <view class="sec-title"><view class="sec-bar violet"></view><text>我的文本库</text></view>
+      <text class="sec-more">{{filtered.length}}/{{texts.length}} 条</text>
     </view>
     <view class="search">
       <text class="search-ico">🔍</text>
@@ -60,16 +82,23 @@
         class="search-input"
         value="{{keyword}}"
         placeholder="搜索文本内容，点条目直接去录"
+        placeholder-class="search-ph"
         confirm-type="search"
         bindinput="onKeyword"
       />
       <text wx:if="{{keyword}}" class="search-clear" bindtap="clearKeyword">✕</text>
     </view>
-    <view wx:if="{{loading}}" class="tip">加载中...</view>
+    <view wx:if="{{loading}}" class="sk-wrap">
+      <view class="sk sk-line"></view>
+      <view class="sk sk-line"></view>
+      <view class="sk sk-line"></view>
+    </view>
     <view
       wx:for="{{filtered}}"
       wx:key="id"
-      class="card text-card"
+      class="card text-item"
+      hover-class="press"
+      hover-stay-time="60"
       data-id="{{item.id}}"
       bindtap="onTapText"
     >
@@ -81,24 +110,28 @@
     </view>
   </block>
 
-  <!-- 常见退回原因 -->
-  <view class="section-title">常见退回原因</view>
-  <view class="card faq">
-    <view wx:for="{{faq}}" wx:key="q" class="faq-item" data-i="{{index}}" bindtap="onToggleFaq">
+  <!-- ==================== 常见退回原因 ==================== -->
+  <view class="sec-head">
+    <view class="sec-title"><view class="sec-bar amber"></view><text>常见退回原因</text></view>
+  </view>
+  <view class="list">
+    <view wx:for="{{faq}}" wx:key="q" class="faq" data-i="{{index}}" bindtap="onToggleFaq">
       <view class="faq-q">
-        <text class="faq-mark">{{openFaq === index ? '−' : '+'}}</text>
-        <text>{{item.q}}</text>
+        <text class="faq-mark {{openFaq === index ? 'open' : ''}}">{{openFaq === index ? '−' : '+'}}</text>
+        <text class="faq-q-text">{{item.q}}</text>
       </view>
       <view wx:if="{{openFaq === index}}" class="faq-a">{{item.a}}</view>
     </view>
   </view>
 
-  <!-- 管理员专属 -->
+  <!-- ==================== 管理员专属 ==================== -->
   <block wx:if="{{isManager}}">
-    <view class="section-title">导入格式说明</view>
-    <view class="card">
-      <view class="fmt-desc">Excel/CSV 仅需两列：序号 + 汉语文本。序号不参与采集，只用于定位；每行一条句子。</view>
-      <view class="fmt-table">
+    <view class="sec-head">
+      <view class="sec-title"><view class="sec-bar"></view><text>导入格式说明</text></view>
+    </view>
+    <view class="card block">
+      <view class="block-desc">Excel / CSV 仅需两列：序号 + 汉语文本。序号不参与采集，只用于定位；每行一条句子。</view>
+      <view class="fmt">
         <view class="fmt-row head">
           <text class="fmt-c1">序号</text>
           <text class="fmt-c2">汉语文本</text>
@@ -112,15 +145,17 @@
           <text class="fmt-c2">请把窗户关上，外面风有点大。</text>
         </view>
       </view>
-      <button class="btn-line" bindtap="onCopyTemplate">复制模板示例</button>
+      <button class="btn-line" hover-class="press" bindtap="onCopyTemplate">复制模板示例</button>
     </view>
 
-    <view class="section-title">上线前检查项</view>
-    <view class="card">
-      <view class="li">· 小程序后台配置 request 合法域名（后端需 HTTPS）</view>
-      <view class="li">· 隐私协议中勾选「麦克风」权限说明</view>
-      <view class="li">· 导出数据集时确认已勾选完整性校验（manifest.json）</view>
-      <view class="li">· 导出包默认保留 7 天，可在审计日志页手动清理</view>
+    <view class="sec-head">
+      <view class="sec-title"><view class="sec-bar amber"></view><text>上线前检查项</text></view>
+    </view>
+    <view class="card block">
+      <view class="li"><text class="li-dot"></text>小程序后台配置 request 合法域名（后端需 HTTPS）</view>
+      <view class="li"><text class="li-dot"></text>隐私协议中勾选「麦克风」权限说明</view>
+      <view class="li"><text class="li-dot"></text>导出数据集时确认已勾选完整性校验（manifest.json）</view>
+      <view class="li"><text class="li-dot"></text>导出包默认保留 7 天，可在审计日志页手动清理</view>
     </view>
   </block>
 

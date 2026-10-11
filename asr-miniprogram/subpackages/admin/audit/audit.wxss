@@ -161,3 +161,37 @@
 .more.done {
   color: #ccc;
 }
+
+/* ============ 统一视觉主题：与底部导航一致的圆角 / 阴影 / 品牌色 ============ */
+.page {
+  background: var(--bg);
+}
+.card,
+.job {
+  border-radius: var(--r-lg);
+  box-shadow: var(--sd);
+}
+.card {
+  background: var(--card);
+}
+.tab {
+  color: var(--t2);
+  box-shadow: var(--sd);
+  transition: background 0.25s var(--ease), color 0.25s var(--ease);
+}
+.tab.on {
+  background: linear-gradient(135deg, #2b8cff, #58b6ff);
+  font-weight: 600;
+}
+.clean-btn,
+.jobs-toggle,
+.more {
+  color: var(--brand);
+}
+.action {
+  color: var(--t1);
+}
+.role {
+  color: var(--brand);
+  background: var(--brand-soft);
+}

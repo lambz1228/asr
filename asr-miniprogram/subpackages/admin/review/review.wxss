@@ -119,3 +119,53 @@
   margin-top: 80rpx;
   font-size: 26rpx;
 }
+
+/* ============ 统一视觉主题：与底部导航一致的圆角 / 阴影 / 品牌色 ============ */
+.page {
+  background: var(--bg);
+}
+.tab {
+  color: var(--t2);
+  box-shadow: var(--sd);
+  transition: background 0.25s var(--ease), color 0.25s var(--ease);
+}
+.tab.on {
+  background: linear-gradient(135deg, #2b8cff, #58b6ff);
+  box-shadow: 0 8rpx 20rpx rgba(26, 140, 255, 0.26);
+  font-weight: 600;
+}
+.export-btn {
+  color: var(--brand);
+  border-color: var(--brand);
+}
+.card {
+  border-radius: var(--r-lg);
+  box-shadow: var(--sd);
+}
+.rid {
+  color: var(--t1);
+}
+.badge {
+  font-weight: 600;
+}
+.play-btn,
+.ok-btn,
+.no-btn {
+  border-radius: var(--r-md);
+  transition: transform 0.16s var(--ease);
+}
+.play-btn {
+  background: linear-gradient(135deg, #4aa8ff, #1a8cff);
+  box-shadow: 0 8rpx 18rpx rgba(26, 140, 255, 0.24);
+}
+.ok-btn {
+  background: linear-gradient(135deg, #35d07f, #07c160);
+  box-shadow: 0 8rpx 18rpx rgba(7, 193, 96, 0.22);
+}
+.no-btn {
+  color: var(--red);
+  border-color: #f7c9c5;
+}
+.flag {
+  border-radius: var(--r-sm);
+}

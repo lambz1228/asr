@@ -1,9 +1,260 @@
+/* ==========================================================================
+   全局设计令牌 · 动效库
+   两个身份（采集员 / 管理员）共用同一套视觉语言与动画节奏
+   ========================================================================== */
 page {
-  background: #f5f5f5;
-  font-family: -apple-system, BlinkMacSystemFont, "Helvetica Neue", sans-serif;
+  /* 品牌色：主色蓝（导航 / 主操作）+ 成功绿（提交 / 已通过）*/
+  --brand: #1a8cff;
+  --brand-2: #58b6ff;
+  --brand-3: #0e6fd8;
+  --brand-soft: #e9f4ff;
+  --green: #07c160;
+  --green-2: #35d07f;
+  --green-soft: #e7f8ef;
+  --amber: #ff9500;
+  --amber-soft: #fff5e6;
+  --red: #f0453a;
+  --red-soft: #ffeeec;
+  --violet: #7c5cff;
+  --violet-soft: #f0ecff;
+
+  /* 中性色 */
+  --bg: #eef1f6;
+  --card: #ffffff;
+  --t1: #12171f;
+  --t2: #5a6470;
+  --t3: #98a1ac;
+  --t4: #c3c9d1;
+  --line: #edf0f4;
+
+  /* 圆角 / 阴影 / 缓动 */
+  --r-xl: 32rpx;
+  --r-lg: 24rpx;
+  --r-md: 18rpx;
+  --r-sm: 12rpx;
+  --sd: 0 6rpx 22rpx rgba(20, 33, 56, 0.06);
+  --sd-md: 0 10rpx 30rpx rgba(20, 33, 56, 0.09);
+  --sd-lg: 0 16rpx 44rpx rgba(20, 33, 56, 0.14);
+  --ease: cubic-bezier(0.22, 0.9, 0.32, 1);
+  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+
+  /* 自定义 tabBar 高度（页面底部留白的唯一来源） */
+  --tabbar-h: 152rpx;
+
+  background: var(--bg);
+  color: var(--t1);
+  font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Helvetica Neue", sans-serif;
+  -webkit-font-smoothing: antialiased;
 }
 
-.btn-primary {
-  background: #07c160;
-  color: #fff;
+/* ============================== 动画关键帧 ============================== */
+/* 卡片/区块入场：上浮 + 轻微放大 */
+@keyframes riseIn {
+  from {
+    opacity: 0;
+    transform: translate3d(0, 30rpx, 0) scale(0.985);
+  }
+  to {
+    opacity: 1;
+    transform: translate3d(0, 0, 0) scale(1);
+  }
+}
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+@keyframes popIn {
+  0% {
+    opacity: 0;
+    transform: scale(0.82);
+  }
+  62% {
+    opacity: 1;
+    transform: scale(1.05);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+/* 进度条从左侧生长 */
+@keyframes barGrow {
+  from {
+    transform: scaleX(0);
+  }
+  to {
+    transform: scaleX(1);
+  }
+}
+/* 未录制时录音键的呼吸光晕 */
+@keyframes breathe {
+  0%,
+  100% {
+    transform: scale(1);
+    opacity: 0.5;
+  }
+  50% {
+    transform: scale(1.14);
+    opacity: 0.14;
+  }
+}
+/* 录制中向外扩散的波纹 */
+@keyframes ripple {
+  0% {
+    transform: scale(0.78);
+    opacity: 0.5;
+  }
+  100% {
+    transform: scale(1.85);
+    opacity: 0;
+  }
+}
+/* 录制中律动波形条 */
+@keyframes wave {
+  0%,
+  100% {
+    transform: scaleY(0.28);
+  }
+  50% {
+    transform: scaleY(1);
+  }
+}
+/* 骨架屏微光 */
+@keyframes shimmer {
+  from {
+    background-position: -360rpx 0;
+  }
+  to {
+    background-position: 360rpx 0;
+  }
+}
+/* 折叠面板展开 */
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translate3d(0, -14rpx, 0);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+/* 徽标脉冲（待处理提醒） */
+@keyframes pulseDot {
+  0%,
+  100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.35);
+  }
+}
+
+/* ============================== 通用工具类 ============================== */
+/* 交错入场：容器内每个直接子 view 依次上浮出现（最多 12 项递进）
+   注意 fill-mode 用 backwards 而非 both —— 动画结束后不锁定 transform，
+   否则卡片自身的 hover-class 按压缩放会被动画残留样式盖掉。 */
+.stagger > view {
+  animation: riseIn 0.46s cubic-bezier(0.22, 0.9, 0.32, 1) backwards;
+}
+.stagger > view:nth-child(1) {
+  animation-delay: 0.02s;
+}
+.stagger > view:nth-child(2) {
+  animation-delay: 0.06s;
+}
+.stagger > view:nth-child(3) {
+  animation-delay: 0.1s;
+}
+.stagger > view:nth-child(4) {
+  animation-delay: 0.14s;
+}
+.stagger > view:nth-child(5) {
+  animation-delay: 0.18s;
+}
+.stagger > view:nth-child(6) {
+  animation-delay: 0.22s;
+}
+.stagger > view:nth-child(7) {
+  animation-delay: 0.26s;
+}
+.stagger > view:nth-child(8) {
+  animation-delay: 0.3s;
+}
+.stagger > view:nth-child(9) {
+  animation-delay: 0.34s;
+}
+.stagger > view:nth-child(10) {
+  animation-delay: 0.38s;
+}
+.stagger > view:nth-child(11) {
+  animation-delay: 0.42s;
+}
+.stagger > view:nth-child(n + 12) {
+  animation-delay: 0.46s;
+}
+
+.rise {
+  animation: riseIn 0.46s cubic-bezier(0.22, 0.9, 0.32, 1) backwards;
+}
+.pop {
+  animation: popIn 0.42s cubic-bezier(0.22, 0.9, 0.32, 1) backwards;
+}
+.fade {
+  animation: fadeIn 0.36s cubic-bezier(0.22, 0.9, 0.32, 1) backwards;
+}
+
+/* 通用卡片 */
+.card {
+  background: var(--card);
+  border-radius: var(--r-lg);
+  box-shadow: var(--sd);
+}
+
+/* 按压反馈（配合 hover-class="press"） */
+.press {
+  transform: scale(0.975);
+  opacity: 0.92;
+}
+
+/* 骨架屏 */
+.sk {
+  background: linear-gradient(90deg, #eaeef4 25%, #f8fafd 37%, #eaeef4 63%);
+  background-size: 360rpx 100%;
+  animation: shimmer 1.15s linear infinite;
+  border-radius: var(--r-sm);
+}
+
+/* tab 页底部留白：避开自定义 tabBar 与全面屏安全区 */
+.tab-pad {
+  padding-bottom: calc(var(--tabbar-h) + env(safe-area-inset-bottom));
+}
+
+/* 空态 */
+.empty-ico-wrap {
+  width: 168rpx;
+  height: 168rpx;
+  margin: 0 auto;
+  border-radius: 50%;
+  background: linear-gradient(160deg, #ffffff, #e8eef7);
+  box-shadow: var(--sd-md);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  animation: popIn 0.5s cubic-bezier(0.22, 0.9, 0.32, 1) both;
+}
+
+/* 按钮通用：去默认边框 + 按压缩放 */
+button::after {
+  border: none;
+}
+.btn-tap {
+  transition: transform 0.16s var(--ease), box-shadow 0.16s var(--ease);
+}
+.btn-tap.press {
+  transform: scale(0.97);
 }

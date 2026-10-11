@@ -1,7 +1,7 @@
-<view class="page">
+<view class="page stagger">
   <view class="topbar">
     <view class="topbar-title">审计日志 · 共 {{total}} 条</view>
-    <button class="clean-btn" size="mini" loading="{{cleaning}}" bindtap="onCleanup">清理过期导出</button>
+    <button class="clean-btn" hover-class="press" size="mini" loading="{{cleaning}}" bindtap="onCleanup">清理过期导出</button>
   </view>
 
   <!-- 操作类型筛选 -->

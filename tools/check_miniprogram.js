@@ -106,6 +106,28 @@ for (const item of (app.tabBar && app.tabBar.list) || []) {
   }
 }
 
+// tabBar.custom = true 时必须提供 custom-tab-bar 组件，否则页面底部会没有导航
+if (app.tabBar && app.tabBar.custom) {
+  for (const ext of ['.js', '.json', '.wxml', '.wxss']) {
+    const p = path.join(ROOT, 'custom-tab-bar', 'index' + ext)
+    fs.existsSync(p) ? ok('custom-tab-bar ' + path.basename(p)) : fail(`自定义 tabBar 组件缺失：custom-tab-bar/index${ext}`)
+  }
+  const cbJson = path.join(ROOT, 'custom-tab-bar', 'index.json')
+  if (fs.existsSync(cbJson)) {
+    try {
+      const j = JSON.parse(fs.readFileSync(cbJson, 'utf8'))
+      j.component === true ? ok('custom-tab-bar 声明为组件') : fail('custom-tab-bar/index.json 缺少 "component": true')
+    } catch (e) {
+      fail('custom-tab-bar/index.json 解析失败：' + e.message)
+    }
+  }
+  // 组件内引用的图标与类型定义必须同时存在于 tabBar.list
+  const cbWxml = fs.readFileSync(path.join(ROOT, 'custom-tab-bar', 'index.wxml'), 'utf8')
+  ;['activeIcon', 'icon'].forEach((k) => {
+    cbWxml.includes(`item.${k}`) ? ok(`custom-tab-bar 使用 ${k}`) : warn(`custom-tab-bar 未使用 ${k}`)
+  })
+}
+
 console.log('== 4. 源码内页面跳转路径 ==')
 // 只校验 wx.navigateTo / redirectTo / reLaunch / switchTab 的 url，
 // 避免把 wx.request 的后端接口路径误判成页面
@@ -166,6 +188,30 @@ for (const f of wxmlFiles) {
   if (!problem && stack.length) problem = `未闭合标签：<${stack.join('>, <')}>`
   problem ? fail(`${rel(f)} ${problem}`) : ok(rel(f))
 }
+
+console.log('== 6. WXML 里字面量 class 必须有样式定义 ==')
+// 只检查不带 {{ }} 的字面量 class（条件类名由数据驱动，无法静态判定）
+const styleFiles = walk(ROOT, (n) => n.endsWith('.wxss'))
+const definedClasses = new Set()
+for (const f of styleFiles) {
+  for (const m of fs.readFileSync(f, 'utf8').matchAll(/\.([a-zA-Z][a-zA-Z0-9_-]*)/g)) {
+    definedClasses.add(m[1])
+  }
+}
+let orphanCount = 0
+for (const f of walk(ROOT, (n) => n.endsWith('.wxml'))) {
+  const src = fs.readFileSync(f, 'utf8').replace(/\{\{[\s\S]*?\}\}/g, ' ')
+  for (const m of src.matchAll(/class="([^"]*)"/g)) {
+    for (const token of m[1].split(/\s+/).filter(Boolean)) {
+      if (!/^[a-zA-Z][a-zA-Z0-9_-]*$/.test(token)) continue
+      if (!definedClasses.has(token)) {
+        orphanCount += 1
+        warn(`${rel(f)} 使用了未定义的 class：${token}`)
+      }
+    }
+  }
+}
+orphanCount === 0 ? ok(`class 全部有样式定义（共 ${definedClasses.size} 个类名）`) : null
 
 console.log('')
 console.log(`检查完成：${errors.length} 个错误，${warns.length} 个警告`)

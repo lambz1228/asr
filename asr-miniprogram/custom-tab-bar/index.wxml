@@ -1,0 +1,17 @@
+<view class="bar">
+  <!-- 活动项高亮块：left 带过渡，切 tab 时横向滑动 -->
+  <view class="blob" style="left:{{blob}}%"></view>
+
+  <view
+    wx:for="{{list}}"
+    wx:key="pagePath"
+    class="item {{selected === index ? 'on' : ''}}"
+    data-i="{{index}}"
+    bindtap="onTap"
+  >
+    <view class="ico-wrap">
+      <image class="ico" src="{{selected === index ? item.activeIcon : item.icon}}" mode="aspectFit" />
+    </view>
+    <view class="txt">{{item.text}}</view>
+  </view>
+</view>

@@ -18,6 +18,7 @@
     }
   ],
   "tabBar": {
+    "custom": true,
     "color": "#9aa0a6",
     "selectedColor": "#1a8cff",
     "backgroundColor": "#ffffff",
@@ -53,7 +54,8 @@
     "navigationBarBackgroundColor": "#ffffff",
     "navigationBarTitleText": "ASR 采集",
     "navigationBarTextStyle": "black",
-    "backgroundColor": "#f5f5f5"
+    "backgroundColor": "#eef1f6",
+    "backgroundTextStyle": "dark"
   },
   "permission": {
     "scope.record": {

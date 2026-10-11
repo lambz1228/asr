@@ -59,6 +59,8 @@ Page({
     // 已录过则提示会替换旧录音（version > 0）
     replacing: false,
     version: 1,
+    // 切任务时文本区的滑入方向类（成对交替，强制重放动画）
+    slideCls: 's-r1',
     // 面板内瞬时提示（如「上传成功」）
     toast: '',
     statusText: ''
@@ -196,9 +198,14 @@ Page({
     if (!item) return
     this.stopPlay()
     this.clearTimer()
+    // 向后翻（下一条）从右侧滑入，向前翻（上一条）从左侧滑入；
+    // 两个类名交替使用，保证连续同向切换时动画也会重放
+    const dir = i < this.data.index ? 'l' : 'r'
+    const next = this.data.slideCls === `s-${dir}1` ? `s-${dir}2` : `s-${dir}1`
     this.setData({
       index: i,
       current: item,
+      slideCls: next,
       replacing: (item.version || 0) > 0,
       version: (item.version || 0) + 1,
       recording: false,
