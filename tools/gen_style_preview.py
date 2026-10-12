@@ -2,14 +2,19 @@
 """
 用「真实的 WXSS」生成一张可截图的 HTML 预览。
 
-为什么要这个：之前 .workbuddy/preview/unified-nav.html 是手写的 CSS 镜像，
-Chrome 会精确计算 calc(50% - 4px) 的小数宽度，所以预览里是两列、
-真机上却因为 rpx 取整退化成单列 —— 预览"骗"了我们。
-这个脚本直接把 asr-miniprogram 里的 app.wxss / 页面 wxss / custom-tab-bar 转成 CSS
-（rpx -> px 按 375 设计宽度折算 0.5，page -> :root，view -> div，text -> span），
-再用与 WXML 结构一致的标记渲染，最大化还原真机效果。
+既有的 .workbuddy/preview/*.html 都是手写的 CSS 镜像，Chrome 会精确计算
+calc(50% - 4px) 的小数宽度，所以预览里是两列、真机上却因为 rpx 取整退化成单列
+—— 预览"骗"了我们。这个脚本直接把 asr-miniprogram 里的 app.wxss / 页面 wxss /
+custom-tab-bar 转成 CSS（rpx -> px 按 375 设计宽度折算 0.5，page -> :root，
+view -> div，text -> span），再用与 WXML 结构一致的标记渲染，最大化还原真机效果。
 
-用法: python tools/gen_style_preview.py [page]    # page: resources | home
+生成 4 个页面（见 PAGES）：
+  style-preview.html         学习资源（采集端，含 tabBar 高亮块落点校验条）
+  style-preview-audit.html   审计日志（管理端分包）
+  style-preview-review.html  审核台（管理端分包）
+  style-preview-import.html  导入任务（管理端分包）
+
+用法: python tools/gen_style_preview.py
 """
 import base64
 import io
@@ -309,6 +314,83 @@ def review_inner():
     )
 
 
+def import_inner():
+    """导入任务页（paste 为主态）。
+
+    真机上「粘贴文本 / 上传文件」是 wx:if 互斥、结果块也是 wx:if，
+    这里为了**一次性看全所有组件样式**把它们都铺出来——本页只用于比对样式，
+    不代表真实同屏内容。表单默认值取自 import.ts（formats=['aac','mp3'],
+    sampleRate=16000, channels=1, DISTRIBUTE_LABELS[0]='每人一份（各录全部）'）。
+    """
+    users = [('u_col_07', True), ('u_col_12', True), ('u_col_23', False)]
+    user_html = '\n'.join(
+        '        <label class="user-item"><input type="checkbox"%s />'
+        '<span class="user-name">%s</span></label>' % (' checked' if ck else '', uid)
+        for uid, ck in users
+    )
+    return ''.join([
+        '    <div class="tabs">\n'
+        '      <div class="tab on">粘贴文本</div>\n'
+        '      <div class="tab">上传文件</div>\n'
+        '    </div>\n',
+
+        '    <div class="form">\n'
+        '      <div class="field"><span class="label">任务包 ID</span>'
+        '<input class="input" placeholder="留空自动生成" /></div>\n'
+        '      <div class="field"><span class="label">任务包名称</span>'
+        '<input class="input" placeholder="留空用任务包 ID" /></div>\n'
+        '      <div class="field-row">\n'
+        '        <div class="field half"><span class="label">采样率</span>'
+        '<input class="input" value="16000" /></div>\n'
+        '        <div class="field half"><span class="label">声道</span>'
+        '<input class="input" value="1" /></div>\n'
+        '        <div class="field half"><span class="label">格式</span>'
+        '<div class="input picker">aac</div></div>\n'
+        '      </div>\n'
+        '    </div>\n',
+
+        '    <div class="card">\n'
+        '      <div class="card-head"><span class="card-title">下发给</span>'
+        '<div class="links"><span class="link">全选</span>'
+        '<span class="link">清空</span></div></div>\n'
+        '      <div class="hint">勾选后任务直接下发到该采集员的「我的任务」；'
+        '不勾选则进入公共池，由采集员自行领取</div>\n'
+        '      <div class="users">\n' + user_html + '\n      </div>\n'
+        '      <div class="field distribute"><span class="label">分配方式</span>'
+        '<div class="input picker">每人一份（各录全部）</div></div>\n'
+        '    </div>\n',
+
+        '    <div class="hint">每行一条待录制文本，空行自动忽略</div>\n'
+        '    <div class="textarea">今天天气真好，我们一起去公园散步吧。<br />'
+        '请朗读这一段新闻：本地气温将明显下降。</div>\n'
+        '    <button class="submit">导入并下发</button>\n',
+
+        '    <div class="hint">支持 Excel（.xlsx 两列：序号 / 汉语文本）与 CSV、JSON；'
+        '「序号」列自动忽略</div>\n'
+        '    <div class="file-picker">\n'
+        '      <div class="file-name">任务文本_1012.xlsx</div>\n'
+        '      <div class="file-tip">从聊天记录中选取（可先发到「文件传输助手」）</div>\n'
+        '    </div>\n'
+        '    <button class="submit">上传并下发</button>\n',
+
+        '    <div class="result">\n'
+        '      <div class="result-title">导入完成</div>\n'
+        '      <div class="result-rows">\n'
+        '        <span>任务包：pkg_20261012</span>\n'
+        '        <span>新增文本：240</span>\n'
+        '        <span>新增子任务：240</span>\n'
+        '        <span>下发对象：u_col_07、u_col_12</span>\n'
+        '        <span>分配方式：轮流分摊</span>\n'
+        '        <span>跳过：3</span>\n'
+        '      </div>\n'
+        '      <div class="errs">\n'
+        '        <span class="err">第 12 行：文本重复，已跳过</span>\n'
+        '        <span class="err">第 88 行：空文本，已跳过</span>\n'
+        '      </div>\n'
+        '    </div>',
+    ])
+
+
 DOC = """<!DOCTYPE html>
 <html lang="zh-CN">
 <head>
@@ -387,6 +469,9 @@ PAGES = [
     ('style-preview-review.html', '审核台（管理端分包）',
      ['app.wxss', 'subpackages/admin/review/review.wxss'],
      admin_shell('审核台', review_inner()), False),
+    ('style-preview-import.html', '导入任务（管理端分包）',
+     ['app.wxss', 'subpackages/admin/import/import.wxss'],
+     admin_shell('导入任务', import_inner()), False),
 ]
 
 
