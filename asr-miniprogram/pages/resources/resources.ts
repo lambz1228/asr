@@ -1,7 +1,7 @@
 import { request } from '../../utils/request'
-import { getMe } from '../../utils/auth'
+import { getMe, isManagerRole, currentRole } from '../../utils/auth'
 import { getConsentStatus } from '../../utils/consent'
-import { goRecordTab } from '../../utils/nav'
+import { goRecordTab, TAB } from '../../utils/nav'
 import { openPrivacyContract } from '../../utils/privacy'
 import { cachedFetch, invalidate, readCache, KEY, TTL_DATA } from '../../utils/cache'
 
@@ -76,7 +76,6 @@ Page({
     anim: '',
     role: '',
     roleText: '',
-    isCollector: false,
     consentSigned: true,
     rules: RULES,
     faq: FAQ,
@@ -92,14 +91,31 @@ Page({
   allTexts: [] as TaskItem[],
   rendered: false,
   animTimer: null as any,
+  // 判定为「管理员误入」并已弹走：之后不再拉文本库
+  blocked: false,
 
+  onLoad() {
+    // 本页只服务采集员（同 record 页）：管理员的导航里没有它，但页面栈可能被
+    // 恢复（DevTools 保留页面栈 / 热重载 / 演示切身份后回到旧页）。
+    // 角色同步可读，所以能在渲染之前就弹走，不闪一帧。
+    if (isManagerRole(currentRole())) {
+      this.blocked = true
+      wx.switchTab({
+        url: TAB.home,
+        fail: () => wx.reLaunch({ url: TAB.home })
+      })
+    }
+  },
   onShow() {
+    if (this.blocked) return
     this.load()
   },
   onPullDownRefresh() {
     // 下拉 = 明确要最新数据
+    wx.stopPullDownRefresh()
+    if (this.blocked) return
     invalidate()
-    this.load().finally(() => wx.stopPullDownRefresh())
+    this.load()
   },
   onUnload() {
     if (this.animTimer) clearTimeout(this.animTimer)
@@ -110,19 +126,20 @@ Page({
     if (!this.rendered && !warm) this.setData({ skeleton: true })
     try {
       const me = await getMe()
-      const isManager = me.role === 'admin' || me.role === 'reviewer'
-      this.setData({
-        role: me.role,
-        roleText: ROLE_TEXT[me.role] || me.role,
-        isCollector: !isManager
-      })
-      // 管理员已进不来本页（导航里没有它），这里只是防御：万一被别处 navigateTo 过来，
-      // 别把采集员的文本库塞给他看
+      const isManager = isManagerRole(me.role)
+      // 兜底：onLoad 的同步判断可能撞上「角色还没写下来」的时机，这里补一刀
       if (isManager) {
-        this.allTexts = []
-        this.setData({ filtered: [], textCount: 0, shownCount: 0 })
+        this.blocked = true
+        wx.switchTab({
+          url: TAB.home,
+          fail: () => wx.reLaunch({ url: TAB.home })
+        })
         return
       }
+      this.setData({
+        role: me.role,
+        roleText: ROLE_TEXT[me.role] || me.role
+      })
       getConsentStatus()
         .then((st) => this.setData({ consentSigned: !!st.signed }))
         .catch(() => {})

@@ -8,7 +8,7 @@
         <view class="hero-hi">{{greeting}}<text wx:if="{{userId}}">，{{userId}}</text></view>
         <view class="hero-sub">
           <text class="role-tag">{{roleText}}</text>
-          <text class="hero-hint">{{isManager ? '导入 · 审核 · 导出' : '朗读 · 录音 · 提交'}}</text>
+          <text class="hero-hint">{{isManager ? '导入任务 · 任务进度 · 录音审核' : '朗读 · 录音 · 提交'}}</text>
         </view>
       </view>
       <view class="hero-avatar">{{initial || '?'}}</view>
@@ -132,8 +132,51 @@
   </block>
 
   <!-- ==================== 管理员 / 审核员 ==================== -->
+  <!-- 这一屏就是「任务管理」的全部内容：管理动作排最前（导入 / 审核 / 审计），
+       其次是任务进度（完成率 + 三宫格 + 采集员排行 + 任务包）。
+       tab 名叫「任务管理」，第一眼就该是管理台而不是一堆统计数字。 -->
   <block wx:else>
-    <!-- 全局采集完成率 -->
+    <!-- 管理台 -->
+    <view class="sec-head">
+      <view class="sec-title">
+        <view class="sec-bar"></view>
+        <text>管理台</text>
+      </view>
+    </view>
+    <view class="entries">
+      <view wx:if="{{isAdmin}}" class="entry" hover-class="press" hover-stay-time="60" bindtap="onImport">
+        <view class="entry-ico ico-blue">＋</view>
+        <view class="entry-body">
+          <view class="entry-title">导入任务</view>
+          <view class="entry-desc">上传 Excel / CSV 或粘贴文本，统一下发给采集员</view>
+        </view>
+        <view class="entry-arrow">›</view>
+      </view>
+      <view class="entry" hover-class="press" hover-stay-time="60" bindtap="onReview">
+        <view class="entry-ico ico-green">✓</view>
+        <view class="entry-body">
+          <view class="entry-title">录音审核</view>
+          <view class="entry-desc">试听录音，通过或退回{{overall.uploaded ? '（' + overall.uploaded + ' 条待审）' : ''}}</view>
+        </view>
+        <view class="entry-arrow">›</view>
+      </view>
+      <view wx:if="{{isAdmin}}" class="entry" hover-class="press" hover-stay-time="60" bindtap="onAudit">
+        <view class="entry-ico ico-violet">≡</view>
+        <view class="entry-body">
+          <view class="entry-title">审计日志</view>
+          <view class="entry-desc">查看导入 / 审核 / 导出记录，清理过期导出包</view>
+        </view>
+        <view class="entry-arrow">›</view>
+      </view>
+    </view>
+
+    <!-- 任务进度：全局采集完成率 -->
+    <view class="sec-head">
+      <view class="sec-title">
+        <view class="sec-bar green"></view>
+        <text>任务进度</text>
+      </view>
+    </view>
     <view class="card pcard">
       <view class="pc-head">
         <text class="pc-title">采集完成率</text>
@@ -167,34 +210,6 @@
       <view class="stat">
         <view class="stat-num">{{overall.total || 0}}</view>
         <view class="stat-label">总任务</view>
-      </view>
-    </view>
-
-    <!-- 管理入口 -->
-    <view class="entries">
-      <view wx:if="{{isAdmin}}" class="entry" hover-class="press" hover-stay-time="60" bindtap="onImport">
-        <view class="entry-ico ico-blue">＋</view>
-        <view class="entry-body">
-          <view class="entry-title">导入任务</view>
-          <view class="entry-desc">上传 Excel / CSV 或粘贴文本，统一下发给采集员</view>
-        </view>
-        <view class="entry-arrow">›</view>
-      </view>
-      <view class="entry" hover-class="press" hover-stay-time="60" bindtap="onReview">
-        <view class="entry-ico ico-green">✓</view>
-        <view class="entry-body">
-          <view class="entry-title">录音审核</view>
-          <view class="entry-desc">试听录音，通过或退回{{overall.uploaded ? '（' + overall.uploaded + ' 条待审）' : ''}}</view>
-        </view>
-        <view class="entry-arrow">›</view>
-      </view>
-      <view wx:if="{{isAdmin}}" class="entry" hover-class="press" hover-stay-time="60" bindtap="onAudit">
-        <view class="entry-ico ico-violet">≡</view>
-        <view class="entry-body">
-          <view class="entry-title">审计日志</view>
-          <view class="entry-desc">查看导入 / 审核 / 导出记录，清理过期导出包</view>
-        </view>
-        <view class="entry-arrow">›</view>
       </view>
     </view>
 

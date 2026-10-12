@@ -34,11 +34,9 @@
   <!-- 空态：没有可采集的任务 -->
   <view wx:if="{{!skeleton && empty}}" class="empty">
     <view class="empty-ico-wrap"><text class="empty-ico">🎙</text></view>
-    <view class="empty-title">{{isManager ? '当前身份无需采集' : '暂无可采集任务'}}</view>
-    <view class="empty-desc">
-      {{isManager ? '管理员与审核员在「任务管理」进入导入 / 审核台' : '等待管理员下发任务，或到「首页 · 公共池」领取'}}
-    </view>
-    <button class="btn primary" hover-class="btn-press" bindtap="onGoHome">{{isManager ? '去任务管理看看' : '去首页看看'}}</button>
+    <view class="empty-title">暂无可采集任务</view>
+    <view class="empty-desc">等待管理员下发任务，或到「首页 · 公共池」领取</view>
+    <button class="btn primary" hover-class="btn-press" bindtap="onGoHome">去首页看看</button>
   </view>
 
   <block wx:if="{{current}}">

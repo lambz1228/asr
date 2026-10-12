@@ -32,13 +32,7 @@
     <view class="sec-title"><view class="sec-bar green"></view><text>采集前自检</text></view>
   </view>
   <view class="list">
-    <view
-      wx:if="{{isCollector}}"
-      class="row"
-      hover-class="row-press"
-      hover-stay-time="60"
-      bindtap="onGoConsent"
-    >
+    <view class="row" hover-class="row-press" hover-stay-time="60" bindtap="onGoConsent">
       <text class="dot {{consentSigned ? 'ok' : 'todo'}}">{{consentSigned ? '✓' : '!'}}</text>
       <view class="row-body">
         <view class="row-title">《语音信息同意书》</view>
@@ -56,8 +50,8 @@
     </view>
   </view>
 
-  <!-- ==================== 文本库（采集员） ==================== -->
-  <block wx:if="{{isCollector}}">
+  <!-- ==================== 文本库（仅采集员可达本页，见 resources.ts 的角色拦截） ==================== -->
+  <block>
     <view class="sec-head">
       <view class="sec-title"><view class="sec-bar violet"></view><text>我的文本库</text></view>
       <text class="sec-more">{{shownCount}}/{{textCount}} 条</text>

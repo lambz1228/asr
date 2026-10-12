@@ -1,5 +1,5 @@
 import { request } from '../../utils/request'
-import { getMe } from '../../utils/auth'
+import { getMe, isManagerRole, currentRole } from '../../utils/auth'
 import {
   startRecord,
   stopRecord,
@@ -44,7 +44,6 @@ Page({
     current: null as QItem | null,
     // 队列为空（无任务可采）时展示空态
     empty: false,
-    isManager: false,
     // 信息条
     speaker: '',
     // 录音状态
@@ -75,8 +74,17 @@ Page({
   initialTaskId: '',
   fallbackText: '',
   fallbackVersion: 0,
+  // 判定为「管理员误入」并已弹走：之后不再拉队列、不铺骨架
+  blocked: false,
 
   onLoad(options: any) {
+    // 本页只服务采集员。角色是同步可读的（app.globalData.role / Storage，
+    // 见 utils/auth.ts#currentRole），所以能在**第一帧渲染之前**就把管理员弹走，
+    // 不会先闪一帧采集员版式再跳 —— 那一下闪烁正是「UI 切换混乱」的观感来源。
+    if (isManagerRole(currentRole())) {
+      this.bounceToTasks()
+      return
+    }
     // tab 页进入时无参数；带参数的旧入口（列表页 navigateTo）仍兼容
     this.initialTaskId = options.taskId || ''
     this.fallbackText = decodeURIComponent(options.text || '')
@@ -94,16 +102,15 @@ Page({
   },
   // 本页是 tab 页：每次回到本页都同步一次队列（录音中不打扰）
   onShow() {
+    if (this.blocked) return
     if (this.data.recording) return
     this.syncQueue()
   },
   onPullDownRefresh() {
-    if (this.data.recording) {
-      wx.stopPullDownRefresh()
-      return
-    }
+    wx.stopPullDownRefresh()
+    if (this.blocked || this.data.recording) return
     invalidateWorkData()
-    this.syncQueue().finally(() => wx.stopPullDownRefresh())
+    this.syncQueue()
   },
   onUnload() {
     if (this.data.recording) stopRecord()
@@ -115,13 +122,30 @@ Page({
   async loadIdentity() {
     try {
       const me = await getMe()
-      this.setData({
-        speaker: me.userId || '',
-        isManager: me.role === 'admin' || me.role === 'reviewer'
-      })
+      // 兜底：onLoad 的同步判断可能撞上「角色还没写下来」的时机，这里补一刀
+      if (isManagerRole(me.role)) {
+        this.blocked = true
+        this.bounceToTasks()
+        return
+      }
+      this.setData({ speaker: me.userId || '' })
     } catch {
       this.setData({ speaker: '' })
     }
+  },
+
+  // 管理员不该出现在本页 —— 他的导航里只有「任务管理 / 个人中心」。
+  // 正常路径进不来，但页面栈可能被恢复（DevTools 保留页面栈 / 热重载 /
+  // 演示切身份后回到旧页）。这时候最糟的做法是停在「当前身份无需采集」的空态上：
+  // 页面本身是采集员的版式、导航栏写着「语言采集」，管理员会以为自己走错了地方
+  // —— 这正是「UI 切换混乱」的观感来源。直接弹回「任务管理」才是唯一正确答案。
+  bounceToTasks() {
+    this.blocked = true
+    wx.switchTab({
+      url: TAB.home,
+      // 兜底：极端情况下 switchTab 失败（并发切换等），用 reLaunch 硬回首页
+      fail: () => wx.reLaunch({ url: TAB.home })
+    })
   },
 
   // 同步「我的任务」队列，并定位到需要采集的那一条：

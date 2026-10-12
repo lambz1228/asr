@@ -55,6 +55,18 @@ export function rememberRole(role: string) {
   else wx.removeStorageSync('role')
 }
 
+// 同步读当前角色（与 rememberRole 写入的两处同源，空串 = 还不知道）。
+// 用途：需要在**渲染之前**就判断身份的地方 ——
+//   1) 自定义 tabBar 首帧决定渲染几项；
+//   2) 只服务采集员的页面（语言采集 / 学习资源）把管理员弹回「任务管理」：
+//      页面栈可能被恢复（DevTools 保留页面栈、热重载、演示切换身份后回到旧页），
+//      绝不能让管理员停在一个不属于他的页面上。
+export function currentRole(): string {
+  const app = getApp<any>()
+  const fromApp = (app && app.globalData && app.globalData.role) || ''
+  return fromApp || wx.getStorageSync('role') || ''
+}
+
 // 获取当前用户角色，用于决定是否展示审核台等管理入口。
 // 走缓存：/auth/me 被首页、采集页、我的页、学习资源页各调一次，
 // 有缓存后同一轮切换只会发一个请求，且返回是同步微任务，页面不再等网络。

@@ -191,6 +191,24 @@ if (app.tabBar && app.tabBar.custom) {
     ? ok('custom-tab-bar 的角色取自同步可读的位置（globalData / Storage）')
     : fail('custom-tab-bar 没有从同步位置读角色 —— 首帧等不了异步请求，会先渲染错的一套导航')
 
+  // ---- 只服务采集员的页面必须有「管理员误入」拦截 ----
+  // 语言采集 / 学习资源 不在管理员的导航里，但页面栈可能被恢复（DevTools 保留页面栈、
+  // 热重载、演示切身份后回到旧页）。管理员一旦停在采集员版式的页面上，看到的是
+  // 「导航栏写着语言采集、内容是当前身份无需采集」这种自相矛盾的屏 —— 就是「UI 切换混乱」。
+  // 拦截必须能在**渲染之前**生效，所以要求用同步可读的角色（currentRole），
+  // 而不是等 getMe 回来再跳。
+  ;['pages/record/record', 'pages/resources/resources'].forEach((p) => {
+    const tsPath = path.join(ROOT, p + '.ts')
+    const ts = fs.existsSync(tsPath) ? fs.readFileSync(tsPath, 'utf8') : ''
+    // 同步判断必须落在 onLoad 里（渲染之前）；只放在 load() 里会先闪一帧再跳
+    const onLoadBlock = (ts.match(/onLoad\([\s\S]*?\n  \},/) || [''])[0]
+    const syncGuard = /isManagerRole\(currentRole\(\)\)/.test(onLoadBlock)
+    const bounce = /reLaunch/.test(ts) || /switchTab\([\s\S]{0,120}TAB\.home/.test(ts)
+    syncGuard && bounce
+      ? ok(`${p} 在 onLoad 里同步拦截管理员误入并弹回任务管理`)
+      : fail(`${p} 缺少管理员误入拦截 —— 管理员可能停在采集员页面上；需要 onLoad 里 currentRole() 同步判断 + switchTab/reLaunch 回任务管理`)
+  })
+
   // 4) 首帧必须禁过渡：anim 默认 false + wxml 绑 no-anim + wxss 关掉 transition
   ;/anim:\s*false/.test(cbJs)
     ? ok('custom-tab-bar anim 默认 false（首帧不播过渡）')
