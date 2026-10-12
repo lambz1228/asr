@@ -35,5 +35,9 @@ if [ ! -f ".env" ]; then
   cp .env.example .env
 fi
 
-echo "[4/4] 启动后端 -> http://localhost:8000  （按 Ctrl+C 停止）"
+# 主机务必保持 0.0.0.0（IPv4），**不要**改成 --host ::**。
+# Windows 上绑定 [::] 不收 IPv4：127.0.0.1 会被直接拒（实测 2039ms），
+# 真机局域网联调也会一起断。而小程序端用的是 127.0.0.1（见 app.ts 的说明），
+# 两边必须都是 IPv4。
+echo "[4/4] 启动后端 -> http://127.0.0.1:8000  （小程序模拟器也请用 127.0.0.1）"
 exec "$VPY" -m uvicorn main:app --host 0.0.0.0 --port 8000 --reload

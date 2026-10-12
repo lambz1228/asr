@@ -50,6 +50,10 @@ export interface MeResult {
 // 角色变化后 tabBar 的 show 生命周期会复核并换列表，不需要页面主动通知。
 export function rememberRole(role: string) {
   const app = getApp<any>()
+  // 只在**真的变了**时才落盘：getMe 命中缓存时也会调进来，而 setStorageSync 是同步桥调用。
+  // 一次切 tab 有 home / profile / record / resources 四个页面各调一次 getMe ——
+  // 无条件写等于每次切换白做 4 次同步 IO（都在渲染关键路径上）。
+  if (app && app.globalData && app.globalData.role === role) return
   if (app && app.globalData) app.globalData.role = role || ''
   if (role) wx.setStorageSync('role', role)
   else wx.removeStorageSync('role')

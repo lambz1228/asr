@@ -23,7 +23,9 @@
 Uvicorn running on http://0.0.0.0:8000
 ```
 
-自检（另开一个终端）：`curl http://localhost:8000/health` → 返回 `{"status":"ok"}`
+自检（另开一个终端）：`curl http://127.0.0.1:8000/health` → 返回 `{"status":"ok"}`
+> 用 `127.0.0.1` 而不是 `localhost`：本机 `localhost` 先解析到 `::1`，而后端只监听 IPv4，
+> 每次请求会白等约 2 秒才回落到 IPv4（小程序端同理，见 `app.ts` 的 baseUrl 注释）。
 
 > 脚本会自动完成：建 `.venv` → 装依赖 → 由 `.env.example` 生成 `.env` → 以 `--reload` 启动。
 > 重复运行是安全的（已存在则跳过建环境和生成 `.env`）。
