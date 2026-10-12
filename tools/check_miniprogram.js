@@ -392,6 +392,20 @@ for (const f of styleFiles) {
         fail(`${where(idx + 1)} 出现未令牌化的色值 ${m[0]} —— 请改用 var(--token)，或加入白名单并写明理由`)
       }
     }
+    // 「实心品牌色」渐变全仓只允许一种拼写：135deg, var(--brand-lt) -> var(--brand)。
+    // 这条规矩写在档案 §2.2 里但一直没有强制，实测已漂出两套其它写法：
+    //   var(--brand), var(--brand-2)   方向相反（亮端在右下）
+    //   var(--brand-2), var(--brand)   亮端用了 --brand-2 而非 --brand-lt
+    // 只约束 135deg 的两段式；90deg/180deg 的进度条渐变、以及多段头部斜坡
+    // （如 `var(--brand) 0%, #3ea3ff 52%, …`）语义不同，不在本条范围内。
+    // 注意 `var(--brand-lt)` 不会被下面的模式匹配到（`--brand` 之后紧跟 `-lt`），
+    // 所以正确写法天然豁免，无需再加例外。
+    const brandGrad = /linear-gradient\(\s*135deg\s*,\s*var\(--brand(?:-2)?\)\s*,\s*var\(--brand(?:-2)?\)\s*\)/
+    if (brandGrad.test(t)) {
+      tokenIssues += 1
+      fail(`${where(idx + 1)} 实心品牌色渐变拼写不统一（${t.match(brandGrad)[0].replace(/\s+/g, ' ')}）`
+        + ' —— 统一写 linear-gradient(135deg, var(--brand-lt), var(--brand))')
+    }
   })
 }
 tokenIssues === 0 ? ok('字号 / 圆角 / 颜色已全部走设计令牌') : null

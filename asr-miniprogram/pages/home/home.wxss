@@ -226,7 +226,7 @@
   height: 100rpx;
   line-height: 1;
   border-radius: var(--r-lg);
-  background: linear-gradient(135deg, var(--brand), var(--brand-2));
+  background: linear-gradient(135deg, var(--brand-lt), var(--brand));
   color: var(--on-brand);
   font-size: var(--fs-7);
   font-weight: 600;

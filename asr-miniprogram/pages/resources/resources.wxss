@@ -196,7 +196,7 @@
   animation: pulseDot 1.7s ease-in-out infinite;
 }
 .dot.info {
-  background: linear-gradient(135deg, var(--brand-2), var(--brand));
+  background: linear-gradient(135deg, var(--brand-lt), var(--brand));
   box-shadow: var(--sd-brand);
 }
 .row-body {
