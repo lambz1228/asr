@@ -1,8 +1,12 @@
 .page {
   min-height: 100vh;
   box-sizing: border-box;
-  /* 拆成三条写：最后一条 calc 若被机型丢弃，仍保留固定底部留白 */
-  padding: 24rpx 24rpx 0;
+  /* 左右留白唯一来源 --page-pad-x（与分包页一致） */
+  padding-top: 24rpx;
+  padding-right: var(--page-pad-x);
+  padding-left: var(--page-pad-x);
+  /* 本页是 tab 页：底部留出 tabBar 高度。拆成两条写，
+     最后一条 calc 若被机型丢弃，仍保留固定底部留白。 */
   padding-bottom: var(--tab-pad);
   padding-bottom: calc(var(--tab-pad) + env(safe-area-inset-bottom));
 }
