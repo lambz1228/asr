@@ -209,6 +209,23 @@ if (app.tabBar && app.tabBar.custom) {
       : fail(`${p} 缺少管理员误入拦截 —— 管理员可能停在采集员页面上；需要 onLoad 里 currentRole() 同步判断 + switchTab/reLaunch 回任务管理`)
   })
 
+  // ---- tabBar 高亮的「页面级权威纠偏」必须存在 ----
+  // 组件自同步（attached / pageLifetimes.show）在冷启动直入本页、热重载恢复页面栈时，
+  // 可能早于当前页压入 getCurrentPages()，routeIndex 查不到路由会兜底第 0 项且无后续纠偏帧
+  // —— 表现为「页面在 A、高亮停在首页」（2026-10-12 用户截图实锤）。
+  // page onShow 触发时页面栈必已含当前页，所以每个 tab 页 onShow 必须调 syncTabBar(this)。
+  ;['pages/home/home', 'pages/resources/resources', 'pages/record/record', 'pages/profile/profile'].forEach((p) => {
+    const tsPath = path.join(ROOT, p + '.ts')
+    const ts = fs.existsSync(tsPath) ? fs.readFileSync(tsPath, 'utf8') : ''
+    const onShowBlock = (ts.match(/onShow\(\)\s*\{[\s\S]*?\n  \},/) || [''])[0]
+    onShowBlock.includes('syncTabBar(this)')
+      ? ok(`${p} onShow 调用 syncTabBar 权威纠偏高亮`)
+      : fail(`${p} onShow 缺少 syncTabBar(this) —— 冷启动/热重载场景高亮可能停在错误的 tab 上`)
+  })
+  fs.readFileSync(path.join(ROOT, 'utils', 'nav.ts'), 'utf8').includes('export function syncTabBar')
+    ? ok('utils/nav.ts 导出 syncTabBar')
+    : fail('utils/nav.ts 缺少 syncTabBar（tab 页 onShow 的权威纠偏依赖它）')
+
   // 4) 首帧必须禁过渡：anim 默认 false + wxml 绑 no-anim + wxss 关掉 transition
   ;/anim:\s*false/.test(cbJs)
     ? ok('custom-tab-bar anim 默认 false（首帧不播过渡）')

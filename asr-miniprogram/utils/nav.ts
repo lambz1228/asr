@@ -52,3 +52,18 @@ export function goRecordTab(taskId?: string) {
 export function goHomeTab() {
   wx.switchTab({ url: TAB.home })
 }
+
+// 权威纠偏自定义 tabBar 的高亮位置（每个 tab 页的 onShow 第一行调用）。
+//
+// 为什么页面还要管 tabBar：组件虽在 attached / pageLifetimes.show 自同步，
+// 但「冷启动直入本页」「DevTools 热重载恢复页面栈」时这两个时机可能早于当前页
+// 压入 getCurrentPages()，routeIndex 查不到路由会兜底到第 0 项（首页），
+// 且之后没有任何更晚的同步帧 —— 表现就是「页面在 A、高亮停在 B」。
+// page 的 onShow 触发时页面栈必已含当前页，这里的解析结果是权威值。
+// 组件 sync 内部有判重：位置已对时零 setData，重复调用无开销。
+export function syncTabBar(page: unknown) {
+  const inst = page as { getTabBar?: () => { sync?: (anim: boolean) => void } } | undefined
+  if (!inst || typeof inst.getTabBar !== 'function') return
+  const tb = inst.getTabBar()
+  if (tb && typeof tb.sync === 'function') tb.sync(false)
+}

@@ -1,7 +1,7 @@
 import { request } from '../../utils/request'
 import { getMe } from '../../utils/auth'
 import { getConsentStatus } from '../../utils/consent'
-import { goRecordTab, applyTitle } from '../../utils/nav'
+import { goRecordTab, applyTitle, syncTabBar } from '../../utils/nav'
 import {
   cachedFetch,
   invalidate,
@@ -139,6 +139,7 @@ Page({
   animTimer: null as any,
 
   onShow() {
+    syncTabBar(this)
     this.load()
   },
   onPullDownRefresh() {

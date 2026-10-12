@@ -1,7 +1,7 @@
 import { request } from '../../utils/request'
 import { getMe, logout, wxLogin, routeAfterLogin, isManagerRole } from '../../utils/auth'
 import { openPrivacyContract } from '../../utils/privacy'
-import { goRecordTab, goHomeTab, applyTitle } from '../../utils/nav'
+import { goRecordTab, goHomeTab, applyTitle, syncTabBar } from '../../utils/nav'
 import { cachedFetch, invalidate, readCache, KEY, TTL_DATA } from '../../utils/cache'
 
 // 进度口径与服务端 app/stats.py 一致：完成率 = 已通过 / 总任务数
@@ -51,6 +51,7 @@ Page({
   animTimer: null as any,
 
   onShow() {
+    syncTabBar(this)
     this.load()
   },
   onPullDownRefresh() {

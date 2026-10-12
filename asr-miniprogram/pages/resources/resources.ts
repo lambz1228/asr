@@ -1,7 +1,7 @@
 import { request } from '../../utils/request'
 import { getMe, isManagerRole, currentRole } from '../../utils/auth'
 import { getConsentStatus } from '../../utils/consent'
-import { goRecordTab, TAB } from '../../utils/nav'
+import { goRecordTab, TAB, syncTabBar } from '../../utils/nav'
 import { openPrivacyContract } from '../../utils/privacy'
 import { cachedFetch, invalidate, readCache, KEY, TTL_DATA } from '../../utils/cache'
 
@@ -107,6 +107,7 @@ Page({
     }
   },
   onShow() {
+    syncTabBar(this)
     if (this.blocked) return
     this.load()
   },

@@ -10,7 +10,7 @@ import {
 } from '../../utils/recorder'
 import { saveAndUpload } from '../../utils/uploader'
 import { ensurePrivacyAuthorize, openPrivacyContract } from '../../utils/privacy'
-import { takePendingTask, TAB } from '../../utils/nav'
+import { takePendingTask, TAB, syncTabBar } from '../../utils/nav'
 import { cachedFetch, invalidateWorkData, readCache, KEY, TTL_DATA } from '../../utils/cache'
 
 // 队列中的一条任务（来自 GET /tasks）
@@ -102,6 +102,7 @@ Page({
   },
   // 本页是 tab 页：每次回到本页都同步一次队列（录音中不打扰）
   onShow() {
+    syncTabBar(this)
     if (this.blocked) return
     if (this.data.recording) return
     this.syncQueue()
