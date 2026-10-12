@@ -208,18 +208,112 @@ BODY_RESOURCES = """
     <div class="footer">ASR 语音采集 · 两个身份共用同一套导航与规范</div>
   </div>
   <div class="bar">
-    <div class="blob-track" style="transform: translateX(%%(blob_idx)d%%)"><div class="blob"></div></div>
+    <div class="blob-track" style="transform: translateX(%(blob_x)d%%)"><div class="blob"></div></div>
 %(tabbar)s
   </div>
 </div>
 """ % {'rules': rules_html(), 'texts': texts_html(), 'faq': faq_html(),
-   'tabbar': tabbar_html(), 'blob_idx': blob_idx()}
+   'tabbar': tabbar_html(), 'blob_x': blob_idx() * 100}
+
+def admin_shell(navtitle, inner):
+    return """
+<div class="viewport">
+  <div class="statusbar"><span>18:32</span><span>▮▮▮</span></div>
+  <div class="navtitle">%s</div>
+  <div class="page">
+%s
+  </div>
+</div>
+""" % (navtitle, inner)
+
+
+def audit_inner():
+    cards = []
+    rows = [
+        ('审核通过', '10-11 21:03', 'u_admin_01', '管理员', 'recording', 'rec_2f81a9',
+         '{"result":"approved","flags":[]}'),
+        ('录领取任务', '10-11 20:58', 'u_col_07', '采集员', 'assignment', 'asg_5510ee', ''),
+        ('导入任务包', '10-11 20:41', 'u_admin_01', '管理员', 'package', 'pkg_20261011', '共 240 条，split 下发'),
+        ('审核退回', '10-11 19:22', 'u_rev_02', '审核员', 'recording', 'rec_77bb10',
+         '{"reason":"环境嘈杂，底噪明显"}'),
+    ]
+    for action, time, op, role, tt, tid, detail in rows:
+        detail_html = ('\n      <div class="detail">%s</div>' % detail) if detail else ''
+        cards.append(
+            '    <div class="card">\n'
+            '      <div class="card-head"><span class="action">%s</span><span class="time">%s</span></div>\n'
+            '      <div class="who"><span class="operator">%s</span><span class="role">%s</span></div>\n'
+            '      <div class="target">对象 %s · %s</div>%s\n'
+            '    </div>' % (action, time, op, role, tt, tid, detail_html)
+        )
+    return (
+        '    <div class="topbar">\n'
+        '      <div class="topbar-title">审计日志 · 共 128 条</div>\n'
+        '      <button class="clean-btn">清理过期导出</button>\n'
+        '    </div>\n'
+        '<div class="tabs">'
+        '<div class="tab on">全部</div><div class="tab">领取</div><div class="tab">上传</div>'
+        '<div class="tab">审核</div><div class="tab">导入</div></div>\n'
+        '    <div class="jobs-toggle">导出包留存 7 天 · 最近导出 2 个（点击展开）</div>\n'
+        '    <div class="job">\n'
+        '      <div class="job-line"><span class="job-id">job_8f3a21c4</span>'
+        '<span class="job-status done">已完成</span></div>\n'
+        '      <div class="job-meta"><span>240 条</span><span>10-11 20:14</span><span>到期 10-18</span></div>\n'
+        '    </div>\n'
+        '    <div class="job">\n'
+        '      <div class="job-line"><span class="job-id">job_1c09bb77</span>'
+        '<span class="job-status expired">已过期</span></div>\n'
+        '      <div class="job-meta"><span>96 条</span><span>10-02 09:41</span>'
+        '<span class="bad">音频文件缺失</span></div>\n'
+        '    </div>\n' + '\n'.join(cards) + '\n    <div class="more">加载更多</div>'
+    )
+
+
+def review_inner():
+    recs = [
+        ('rec_2f81a9', 'uploaded', '待审核', ['音量偏低', '录音曾中断'], True),
+        ('rec_5c31d0', 'approved', '已通过', [], False),
+        ('rec_90ab42', 'rejected', '已退回', ['时长过短'], False),
+    ]
+    cards = []
+    for rid, status, text, flags, show_actions in recs:
+        flag_html = ''
+        if flags:
+            flag_html = ('\n      <div class="flags">'
+                         + ''.join('<span class="flag">%s</span>' % f for f in flags)
+                         + '</div>')
+        if show_actions:
+            actions = ('\n      <div class="actions"><button class="play-btn">试听</button>'
+                       '<button class="ok-btn">通过</button>'
+                       '<button class="no-btn">退回</button></div>')
+        else:
+            actions = '\n      <div class="actions"><button class="play-btn">试听</button>' \
+                      '<span class="reviewed">已处理</span></div>'
+        cards.append(
+            '    <div class="card">\n'
+            '      <div class="card-head"><span class="rid">%s</span>'
+            '<span class="badge %s">%s</span></div>\n'
+            '      <div class="meta"><span>采样率 16000Hz</span><span>声道 1</span>'
+            '<span>编码 aac</span><span>时长 6.4s</span></div>%s%s\n'
+            '    </div>' % (rid, status, text, flag_html, actions)
+        )
+    return (
+        '    <div class="topbar">\n'
+        '      <div class="tabs"><div class="tab on">待审核</div><div class="tab">已通过</div>'
+        '<div class="tab">已退回</div><div class="tab">全部</div></div>\n'
+        '      <button class="export-btn">导出</button>\n'
+        '    </div>\n'
+        '    <div class="count-tip">共 36 条，已显示 8 条</div>\n'
+        + '\n'.join(cards) +
+        '\n    <div class="more-row"><button class="more-btn">加载更多</button></div>'
+    )
+
 
 DOC = """<!DOCTYPE html>
 <html lang="zh-CN">
 <head>
 <meta charset="utf-8" />
-<title>真实样式预览 · 学习资源</title>
+<title>真实样式预览 · %(title)s</title>
 <style>
 /* ===== 以下 CSS 由 asr-miniprogram 的真实 WXSS 转换而来（rpx -> px, view -> div ...） ===== */
 %(css)s
@@ -282,12 +376,34 @@ if (location.hash.indexOf('bottom') >= 0) {
 """
 
 
+PAGES = [
+    # (输出文件名, 预览标题, 参与转换的 WXSS, body, 是否带 tabBar 落点校验条)
+    ('style-preview.html', '学习资源',
+     ['app.wxss', 'pages/resources/resources.wxss', 'custom-tab-bar/index.wxss'],
+     BODY_RESOURCES, True),
+    ('style-preview-audit.html', '审计日志（管理端分包）',
+     ['app.wxss', 'subpackages/admin/audit/audit.wxss'],
+     admin_shell('审计日志', audit_inner()), False),
+    ('style-preview-review.html', '审核台（管理端分包）',
+     ['app.wxss', 'subpackages/admin/review/review.wxss'],
+     admin_shell('审核台', review_inner()), False),
+]
+
+
 def main():
-    css = read_css('app.wxss', 'pages/resources/resources.wxss', 'custom-tab-bar/index.wxss')
-    html = DOC % {'css': css, 'body': BODY_RESOURCES, 'strip': tabbar_strip_html()}
-    with io.open(OUT, 'w', encoding='utf-8') as f:
-        f.write(html)
-    print('written', os.path.relpath(OUT, ROOT), len(html), 'bytes')
+    outdir = os.path.join(ROOT, '.workbuddy', 'preview')
+    for name, title, css_files, body, with_strip in PAGES:
+        css = read_css(*css_files)
+        html = DOC % {
+            'css': css,
+            'body': body,
+            'title': title,
+            'strip': tabbar_strip_html() if with_strip else '',
+        }
+        path = os.path.join(outdir, name)
+        with io.open(path, 'w', encoding='utf-8') as f:
+            f.write(html)
+        print('written', os.path.relpath(path, ROOT), len(html), 'bytes')
 
 
 if __name__ == '__main__':

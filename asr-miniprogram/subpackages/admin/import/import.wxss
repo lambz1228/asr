@@ -1,40 +1,53 @@
+/* ==========================================================================
+   导入任务 —— 与采集端共用 app.wxss 设计令牌
+   本页是分包页（navigateTo 打开，没有底部 tabBar），底部留白只叠加安全区。
+   ========================================================================== */
 .page {
   min-height: 100vh;
   box-sizing: border-box;
-  padding: 20rpx 20rpx 30rpx;
+  padding-top: 24rpx;
+  padding-right: var(--page-pad-x);
+  padding-bottom: 30rpx;
+  padding-left: var(--page-pad-x);
   padding-bottom: calc(30rpx + env(safe-area-inset-bottom));
-  background: #f5f5f5;
+  background: var(--bg);
 }
 
+/* ------------------------------ 分段控件 ------------------------------ */
 .tabs {
   display: flex;
-  background: #fff;
-  border-radius: 12rpx;
-  padding: 8rpx;
+  background: var(--card);
+  border-radius: var(--r-lg);
+  box-shadow: var(--sd);
+  padding: 10rpx;
   margin-bottom: 20rpx;
 }
 .tab {
   flex: 1;
   text-align: center;
   padding: 16rpx 0;
-  font-size: 28rpx;
-  color: #666;
-  border-radius: 10rpx;
+  font-size: var(--fs-5);
+  color: var(--t2);
+  border-radius: var(--r-md);
+  transition: background 0.25s var(--ease), color 0.25s var(--ease);
 }
 .tab.on {
-  background: #07c160;
-  color: #fff;
+  background: linear-gradient(135deg, var(--brand-lt), var(--brand));
+  color: var(--on-brand);
+  box-shadow: var(--sd-brand);
+  font-weight: 600;
 }
 
+/* ------------------------------ 表单 ------------------------------ */
 .form {
-  background: #fff;
-  border-radius: 14rpx;
+  background: var(--card);
+  border-radius: var(--r-lg);
+  box-shadow: var(--sd);
   padding: 8rpx 24rpx;
-  box-shadow: 0 2rpx 10rpx rgba(0, 0, 0, 0.04);
 }
 .field {
   padding: 18rpx 0;
-  border-bottom: 1rpx solid #f2f2f2;
+  border-bottom: 1rpx solid var(--line);
 }
 .field:last-child {
   border-bottom: none;
@@ -52,31 +65,32 @@
   flex: 1;
 }
 .label {
-  font-size: 24rpx;
-  color: #999;
+  font-size: var(--fs-2);
+  color: var(--t3);
 }
 .input {
   margin-top: 8rpx;
-  font-size: 30rpx;
-  color: #222;
+  font-size: var(--fs-6);
+  color: var(--t1);
 }
 .picker {
-  color: #222;
+  color: var(--t1);
 }
 
 .hint {
   margin: 22rpx 8rpx 12rpx;
-  font-size: 23rpx;
+  font-size: var(--fs-2);
   line-height: 1.6;
-  color: #999;
+  color: var(--t3);
 }
 
+/* ------------------------------ 采集员下发 ------------------------------ */
 .card {
-  background: #fff;
-  border-radius: 14rpx;
+  background: var(--card);
+  border-radius: var(--r-lg);
+  box-shadow: var(--sd);
   padding: 8rpx 24rpx 4rpx;
   margin-top: 20rpx;
-  box-shadow: 0 2rpx 10rpx rgba(0, 0, 0, 0.04);
 }
 .card-head {
   display: flex;
@@ -85,9 +99,9 @@
   padding-top: 18rpx;
 }
 .card-title {
-  font-size: 28rpx;
+  font-size: var(--fs-5);
   font-weight: 600;
-  color: #222;
+  color: var(--t1);
 }
 .links {
   display: flex;
@@ -96,8 +110,8 @@
   margin-left: 24rpx;
 }
 .link {
-  font-size: 24rpx;
-  color: #07c160;
+  font-size: var(--fs-3);
+  color: var(--brand);
 }
 .users {
   display: flex;
@@ -108,73 +122,86 @@
   display: flex;
   align-items: center;
   padding: 14rpx 0;
-  border-bottom: 1rpx solid #f5f5f5;
+  border-bottom: 1rpx solid var(--line);
 }
 .user-name {
-  font-size: 28rpx;
-  color: #333;
+  font-size: var(--fs-5);
+  color: var(--t1);
 }
 .distribute {
-  border-top: 1rpx solid #f2f2f2;
+  border-top: 1rpx solid var(--line);
 }
 .textarea {
   width: 100%;
   box-sizing: border-box;
   height: 360rpx;
-  background: #fff;
-  border-radius: 14rpx;
+  background: var(--card);
+  border-radius: var(--r-lg);
+  box-shadow: var(--sd);
   padding: 22rpx;
-  font-size: 28rpx;
+  font-size: var(--fs-5);
   line-height: 1.7;
-  box-shadow: 0 2rpx 10rpx rgba(0, 0, 0, 0.04);
 }
 
+/* ------------------------------ 文件选择 ------------------------------ */
 .file-picker {
-  background: #fff;
-  border: 2rpx dashed #cfd8e3;
-  border-radius: 14rpx;
+  background: var(--card);
+  border: 2rpx dashed var(--t4);
+  border-radius: var(--r-lg);
+  box-shadow: var(--sd);
   padding: 60rpx 24rpx;
   text-align: center;
 }
 .file-name {
-  font-size: 29rpx;
-  color: #333;
+  font-size: var(--fs-5);
+  color: var(--t1);
   word-break: break-all;
 }
 .file-tip {
   margin-top: 12rpx;
-  font-size: 23rpx;
-  color: #aaa;
+  font-size: var(--fs-2);
+  color: var(--t3);
 }
 
+/* ------------------------------ 提交 ------------------------------ */
 .submit {
   margin-top: 30rpx;
-  background: #07c160;
-  color: #fff;
-  font-size: 30rpx;
+  height: 96rpx;
+  line-height: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--r-lg);
+  font-size: var(--fs-7);
+  font-weight: 600;
+  background: linear-gradient(135deg, var(--green-2), var(--green));
+  color: var(--on-brand);
+  box-shadow: var(--sd-green);
+  transition: transform 0.16s var(--ease);
 }
 .submit::after {
   border: none;
 }
 
+/* ------------------------------ 导入结果 ------------------------------ */
 .result {
   margin-top: 30rpx;
-  background: #fff;
-  border-radius: 14rpx;
+  background: var(--card);
+  border-radius: var(--r-lg);
+  box-shadow: var(--sd);
   padding: 26rpx;
-  box-shadow: 0 2rpx 10rpx rgba(0, 0, 0, 0.04);
 }
 .result-title {
-  font-size: 30rpx;
+  font-size: var(--fs-6);
   font-weight: 600;
-  color: #07c160;
+  color: var(--green);
   margin-bottom: 16rpx;
 }
 .result-rows {
   display: flex;
   flex-direction: column;
-  font-size: 26rpx;
-  color: #555;
+  font-size: var(--fs-4);
+  color: var(--t2);
 }
 .result-rows > text + text {
   margin-top: 10rpx;
@@ -188,80 +215,9 @@
   margin-top: 8rpx;
 }
 .err {
-  font-size: 23rpx;
-  color: #b45309;
-  background: #fef3c7;
+  font-size: var(--fs-2);
+  color: var(--amber-ink);
+  background: var(--amber-ink-soft);
   padding: 8rpx 14rpx;
-  border-radius: 10rpx;
-}
-
-/* ============ 统一视觉主题：与底部导航一致的圆角 / 阴影 / 品牌色 ============ */
-.page {
-  background: var(--bg);
-}
-.tabs {
-  border-radius: var(--r-lg);
-  box-shadow: var(--sd);
-  padding: 10rpx;
-}
-.tab {
-  border-radius: var(--r-md);
-  color: var(--t2);
-  transition: background 0.25s var(--ease), color 0.25s var(--ease);
-}
-.tab.on {
-  background: linear-gradient(135deg, #2b8cff, #58b6ff);
-  box-shadow: 0 8rpx 20rpx rgba(26, 140, 255, 0.28);
-  font-weight: 600;
-}
-.form,
-.card,
-.textarea,
-.file-picker,
-.result {
-  background: var(--card);
-  border-radius: var(--r-lg);
-  box-shadow: var(--sd);
-}
-.label {
-  color: var(--t3);
-  font-size: 23rpx;
-}
-.input,
-.picker,
-.user-name,
-.file-name {
-  color: var(--t1);
-}
-.card-title,
-.result-title {
-  color: var(--t1);
-}
-.result-title {
-  color: var(--green);
-}
-.link {
-  color: var(--brand);
-}
-.hint {
-  color: var(--t3);
-}
-.file-picker {
-  border: 2rpx dashed #cbd5e1;
-}
-.err {
   border-radius: var(--r-sm);
-}
-.submit {
-  height: 96rpx;
-  line-height: 1;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border-radius: var(--r-lg);
-  font-size: 31rpx;
-  font-weight: 600;
-  background: linear-gradient(135deg, #20d47a, #07c160);
-  box-shadow: 0 12rpx 28rpx rgba(7, 193, 96, 0.28);
-  transition: transform 0.16s var(--ease);
 }

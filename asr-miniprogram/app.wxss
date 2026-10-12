@@ -21,22 +21,71 @@ page {
   /* 中性色 */
   --bg: #eef1f6;
   --card: #ffffff;
+  /* 第二层浅面：按下态 / 弱化面板（替代散落的 #f0f2f6/#f2f4f8/#f4f6fa/#f6f8fb/#f7f9fc） */
+  --surface-2: #f4f6fa;
+  /* 深色底上的文字（按钮 / 徽标 / 彩色块）——与 --card 同值但语义不同 */
+  --on-brand: #ffffff;
   --t1: #12171f;
   --t2: #5a6470;
   --t3: #98a1ac;
   --t4: #c3c9d1;
   --line: #edf0f4;
 
+  /* 各色系渐变亮/暗端（与 --brand-2 / --brand-3 同一命名约定） */
+  --brand-lt: #4aa8ff; /* 品牌渐变亮端（按钮 / 图标底） */
+  --amber-2: #ffb340; /* 琥珀渐变亮端 */
+  --amber-3: #e07f00; /* 琥珀渐变暗端 */
+  --red-2: #ff7a72; /* 红色渐变亮端 */
+  --red-3: #d8352b; /* 红色渐变暗端 */
+  --violet-2: #a58bff; /* 紫色渐变亮端 */
+
+  /* 琥珀「警示标签」前景/底色（替代旧色板 #b45309 / #fef3c7） */
+  --amber-ink: #b45309;
+  --amber-ink-soft: #fef3c7;
+  /* 琥珀提示块的浅色描边（替代 #ffe2b0 / #ffe0b2 两个重复值） */
+  --amber-line: #ffe2b0;
+  /* 危险操作的浅色描边（替代旧色板 #f0c2c0 / #f7c9c5） */
+  --red-line: #f7c9c5;
+
   /* 圆角 / 阴影 / 缓动 */
+  --r-xs: 8rpx;
   --r-xl: 32rpx;
   --r-lg: 24rpx;
   --r-md: 18rpx;
   --r-sm: 12rpx;
+  --r-pill: 999rpx;
   --sd: 0 6rpx 22rpx rgba(20, 33, 56, 0.06);
   --sd-md: 0 10rpx 30rpx rgba(20, 33, 56, 0.09);
   --sd-lg: 0 16rpx 44rpx rgba(20, 33, 56, 0.14);
+  /* 品牌色光晕：主操作按钮/图标底，四色统一 offset/blur/alpha 节奏 */
+  --sd-brand: 0 8rpx 20rpx rgba(26, 140, 255, 0.28);
+  --sd-green: 0 8rpx 20rpx rgba(7, 193, 96, 0.24);
+  --sd-violet: 0 8rpx 20rpx rgba(124, 92, 255, 0.24);
+  --sd-amber: 0 8rpx 20rpx rgba(255, 149, 0, 0.26);
+  --sd-red: 0 8rpx 20rpx rgba(240, 69, 58, 0.26);
   --ease: cubic-bezier(0.22, 0.9, 0.32, 1);
   --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+
+  /* 字号阶梯：全仓只用这几档，禁止相邻 1rpx 的随手值（20/21/22/23…）
+     index 按从小到大，取值即下方注释；新增档位必须补在这里并由自检护栏校验 */
+  --fs-1: 20rpx; /* 极小标注 / 角标 */
+  --fs-2: 22rpx; /* 元信息 / 辅助说明 */
+  --fs-3: 24rpx; /* 列表副文本 */
+  --fs-4: 26rpx; /* 正文 */
+  --fs-5: 28rpx; /* 小标题 */
+  --fs-6: 30rpx; /* 标题 */
+  --fs-7: 32rpx; /* 页面主标题 */
+  --fs-8: 36rpx; /* 强调数字 */
+  --fs-9: 40rpx;
+  --fs-10: 44rpx; /* 大标题 / 空态 */
+  --fs-11: 48rpx;
+  --fs-12: 56rpx;
+  --fs-13: 68rpx; /* 进度大数字 */
+  --fs-14: 76rpx;
+  --fs-15: 96rpx;
+
+  /* 统一水平边距：所有页面左右留白都用它，避免 20/24/26rpx 混用 */
+  --page-pad-x: 24rpx;
 
   /* 自定义 tabBar 尺寸（页面底部留白的唯一来源，见 .tab-pad） */
   --tabbar-h: 108rpx;

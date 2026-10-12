@@ -14,7 +14,7 @@
   padding-bottom: env(safe-area-inset-bottom);
   display: flex;
   align-items: stretch;
-  background: #ffffff;
+  background: var(--card);
   border-top: 1rpx solid rgba(20, 33, 56, 0.07);
   box-shadow: 0 -4rpx 16rpx rgba(20, 33, 56, 0.05);
 }
@@ -49,7 +49,7 @@
   width: 132rpx;
   height: 84rpx;
   margin-left: -66rpx;
-  border-radius: 26rpx;
+  border-radius: var(--r-lg);
   background: linear-gradient(135deg, rgba(26, 140, 255, 0.18), rgba(88, 182, 255, 0.1));
   box-shadow: 0 6rpx 18rpx rgba(26, 140, 255, 0.18);
 }
@@ -80,9 +80,9 @@
 /* 只过渡颜色：font-weight 过渡会触发文字重新排版（每帧 layout），去掉 */
 .txt {
   margin-top: 2rpx;
-  font-size: 20rpx;
+  font-size: var(--fs-1);
   line-height: 1.2;
-  color: #9aa0a6;
+  color: var(--t3);
   transition: color 0.28s ease;
 }
 
@@ -95,7 +95,7 @@
   animation: tabPop 0.42s cubic-bezier(0.22, 0.9, 0.32, 1) backwards;
 }
 .item.on .txt {
-  color: #1a8cff;
+  color: var(--brand);
   font-weight: 600;
 }
 

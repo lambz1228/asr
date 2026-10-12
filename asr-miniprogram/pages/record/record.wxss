@@ -23,7 +23,7 @@
   height: 68rpx;
   line-height: 64rpx;
   text-align: center;
-  font-size: 48rpx;
+  font-size: var(--fs-11);
   color: var(--brand);
   background: var(--brand-soft);
   border-radius: var(--r-md);
@@ -31,7 +31,7 @@
 }
 .pg-arrow.disabled {
   color: var(--t4);
-  background: #f2f4f8;
+  background: var(--surface-2);
 }
 .pg-arrow-press {
   transform: scale(0.92);
@@ -47,27 +47,27 @@
   justify-content: center;
 }
 .pg-cur {
-  font-size: 40rpx;
+  font-size: var(--fs-9);
   font-weight: 700;
   color: var(--t1);
   letter-spacing: -1rpx;
 }
 .pg-all {
-  font-size: 24rpx;
+  font-size: var(--fs-3);
   color: var(--t3);
   margin-left: 8rpx;
 }
 .pg-track {
   margin-top: 10rpx;
   height: 8rpx;
-  border-radius: 4rpx;
-  background: #eef1f6;
+  border-radius: var(--r-xs);
+  background: var(--bg);
   overflow: hidden;
 }
 .pg-fill {
   height: 100%;
-  border-radius: 4rpx;
-  background: linear-gradient(90deg, #58b6ff, #1a8cff);
+  border-radius: var(--r-xs);
+  background: linear-gradient(90deg, var(--brand-2), var(--brand));
   transition: width 0.35s var(--ease);
 }
 
@@ -125,20 +125,20 @@
   top: 0;
   bottom: 0;
   width: 10rpx;
-  background: linear-gradient(180deg, #58b6ff, #1a8cff);
+  background: linear-gradient(180deg, var(--brand-2), var(--brand));
 }
 .text-quote {
   position: absolute;
   right: 30rpx;
   top: 4rpx;
-  font-size: 96rpx;
+  font-size: var(--fs-15);
   line-height: 1;
-  color: #eaf3ff;
+  color: var(--brand-soft);
   font-weight: 700;
 }
 .text-main {
   position: relative;
-  font-size: 44rpx;
+  font-size: var(--fs-10);
   line-height: 1.6;
   color: var(--t1);
   text-align: center;
@@ -147,7 +147,7 @@
 .text-id {
   margin-top: 20rpx;
   text-align: center;
-  font-size: 22rpx;
+  font-size: var(--fs-2);
   color: var(--t4);
 }
 
@@ -168,12 +168,12 @@
   flex-direction: column;
 }
 .meta-k {
-  font-size: 21rpx;
+  font-size: var(--fs-1);
   color: var(--t3);
 }
 .meta-v {
   margin-top: 8rpx;
-  font-size: 28rpx;
+  font-size: var(--fs-5);
   font-weight: 600;
   color: var(--t1);
   overflow: hidden;
@@ -199,32 +199,32 @@
   animation: slideDown 0.3s cubic-bezier(0.22, 0.9, 0.32, 1) backwards;
 }
 .bar-title {
-  font-size: 21rpx;
+  font-size: var(--fs-1);
   font-weight: 600;
   margin-bottom: 6rpx;
 }
 .bar-text {
-  font-size: 25rpx;
+  font-size: var(--fs-3);
   line-height: 1.55;
 }
 .reject-bar {
   background: var(--amber-soft);
-  border: 1rpx solid #ffe0b2;
+  border: 1rpx solid var(--amber-line);
 }
 .reject-bar .bar-title,
 .reject-bar .bar-text {
-  color: #a05a00;
+  color: var(--amber-ink);
 }
 .warn-bar {
   background: var(--red);
-  color: #fff;
-  font-size: 25rpx;
+  color: var(--on-brand);
+  font-size: var(--fs-3);
   line-height: 1.5;
 }
 .alert {
   background: var(--red-soft);
-  color: #8a3b39;
-  font-size: 25rpx;
+  color: var(--amber-ink);
+  font-size: var(--fs-3);
   line-height: 1.5;
 }
 
@@ -235,22 +235,22 @@
   margin-top: 22rpx;
   border-radius: var(--r-xl);
   padding: 32rpx 24rpx 26rpx;
-  background: linear-gradient(160deg, #4aa8ff, #1a8cff 60%, #0f78e0);
+  background: linear-gradient(160deg, var(--brand-lt), var(--brand) 60%, var(--brand-3));
   box-shadow: 0 16rpx 40rpx rgba(26, 140, 255, 0.3);
   text-align: center;
   transition: background 0.35s ease, box-shadow 0.35s ease;
 }
 .rec-panel.on {
-  background: linear-gradient(160deg, #ff7a72, #f0453a 60%, #d8352b);
+  background: linear-gradient(160deg, var(--red-2), var(--red) 60%, var(--red-3));
   box-shadow: 0 16rpx 40rpx rgba(240, 69, 58, 0.32);
 }
 .rec-panel.paused {
-  background: linear-gradient(160deg, #ffc061, #ff9500 60%, #e07f00);
+  background: linear-gradient(160deg, var(--amber-2), var(--amber) 60%, var(--amber-3));
   box-shadow: 0 16rpx 40rpx rgba(255, 149, 0, 0.3);
 }
 .rec-timer {
-  color: #fff;
-  font-size: 56rpx;
+  color: var(--on-brand);
+  font-size: var(--fs-12);
   font-weight: 700;
   letter-spacing: 3rpx;
   font-variant-numeric: tabular-nums;
@@ -261,8 +261,8 @@
   top: 108rpx;
   transform: translateX(-50%);
   background: rgba(20, 26, 36, 0.86);
-  color: #fff;
-  font-size: 26rpx;
+  color: var(--on-brand);
+  font-size: var(--fs-4);
   padding: 14rpx 34rpx;
   border-radius: var(--r-sm);
   z-index: 4;
@@ -332,7 +332,7 @@
   width: 168rpx;
   height: 168rpx;
   border-radius: 50%;
-  background: #fff;
+  background: var(--card);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -341,19 +341,19 @@
 .rec-btn.stop {
   width: 120rpx;
   height: 120rpx;
-  border-radius: 26rpx;
+  border-radius: var(--r-lg);
 }
 .rec-dot {
   width: 74rpx;
   height: 74rpx;
   border-radius: 50%;
-  background: linear-gradient(150deg, #4aa8ff, #1a8cff);
+  background: linear-gradient(150deg, var(--brand-lt), var(--brand));
 }
 .rec-square {
   width: 52rpx;
   height: 52rpx;
-  border-radius: 10rpx;
-  background: #f0453a;
+  border-radius: var(--r-xs);
+  background: var(--red);
 }
 
 /* 录制中的律动波形 */
@@ -369,7 +369,7 @@
 .wv {
   width: 8rpx;
   height: 40rpx;
-  border-radius: 4rpx;
+  border-radius: var(--r-xs);
   background: rgba(255, 255, 255, 0.7);
   transform: scaleY(0.28);
 }
@@ -399,8 +399,8 @@
 }
 .rec-label {
   margin-top: 12rpx;
-  color: #fff;
-  font-size: 28rpx;
+  color: var(--on-brand);
+  font-size: var(--fs-5);
   opacity: 0.95;
 }
 
@@ -408,7 +408,7 @@
 .status {
   margin: 22rpx 8rpx 0;
   color: var(--t2);
-  font-size: 25rpx;
+  font-size: var(--fs-3);
   line-height: 1.5;
   animation: fadeIn 0.3s cubic-bezier(0.22, 0.9, 0.32, 1) backwards;
 }
@@ -434,7 +434,7 @@
   align-items: center;
   justify-content: center;
   border-radius: var(--r-lg);
-  font-size: 30rpx;
+  font-size: var(--fs-6);
   transition: transform 0.16s var(--ease);
 }
 .btn::after {
@@ -449,8 +449,8 @@
   box-shadow: var(--sd);
 }
 .btn.primary {
-  background: linear-gradient(135deg, #35d07f, #07c160);
-  color: #fff;
+  background: linear-gradient(135deg, var(--green-2), var(--green));
+  color: var(--on-brand);
   font-weight: 600;
   box-shadow: 0 12rpx 30rpx rgba(7, 193, 96, 0.28);
 }
@@ -462,17 +462,17 @@
   padding: 0 40rpx;
 }
 .empty-ico {
-  font-size: 76rpx;
+  font-size: var(--fs-14);
 }
 .empty-title {
   margin-top: 28rpx;
-  font-size: 32rpx;
+  font-size: var(--fs-7);
   font-weight: 600;
   color: var(--t1);
 }
 .empty-desc {
   margin-top: 14rpx;
-  font-size: 25rpx;
+  font-size: var(--fs-3);
   color: var(--t3);
   line-height: 1.6;
 }

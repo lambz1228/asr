@@ -1,11 +1,21 @@
+/* ==========================================================================
+   审计日志 —— 与采集端共用 app.wxss 设计令牌
+   本页是分包页（navigateTo 打开，没有底部 tabBar），底部留白只叠加安全区，
+   因此不使用 --tab-pad；水平留白统一走 --page-pad-x（=24rpx，与采集端一致）。
+   ========================================================================== */
 .page {
   min-height: 100vh;
   box-sizing: border-box;
-  padding: 24rpx 20rpx 30rpx;
+  /* 拆成长写：即使 calc 那条被机型丢弃，固定留白仍在；也不让整条简写失效 */
+  padding-top: 24rpx;
+  padding-right: var(--page-pad-x);
+  padding-bottom: 30rpx;
+  padding-left: var(--page-pad-x);
   padding-bottom: calc(30rpx + env(safe-area-inset-bottom));
-  background: #f5f5f5;
+  background: var(--bg);
 }
 
+/* ------------------------------ 顶部标题栏 ------------------------------ */
 .topbar {
   display: flex;
   align-items: center;
@@ -13,20 +23,24 @@
   padding: 4rpx 4rpx 18rpx;
 }
 .topbar-title {
-  font-size: 30rpx;
+  font-size: var(--fs-6);
   font-weight: 600;
-  color: #1a1a1a;
+  color: var(--t1);
 }
 .clean-btn {
-  background: #fff;
-  color: #1989fa;
-  font-size: 24rpx;
   margin: 0;
+  background: var(--card);
+  color: var(--brand);
+  font-size: var(--fs-3);
+  border-radius: var(--r-md);
+  box-shadow: var(--sd);
+  transition: transform 0.16s var(--ease);
 }
 .clean-btn::after {
   border: none;
 }
 
+/* ------------------------------ 操作类型筛选 ------------------------------ */
 .tabs {
   white-space: nowrap;
   margin-bottom: 16rpx;
@@ -35,24 +49,30 @@
   display: inline-block;
   padding: 10rpx 24rpx;
   margin-right: 14rpx;
-  border-radius: 30rpx;
-  background: #fff;
-  font-size: 24rpx;
-  color: #666;
+  border-radius: var(--r-pill);
+  background: var(--card);
+  color: var(--t2);
+  font-size: var(--fs-3);
+  box-shadow: var(--sd);
+  transition: background 0.25s var(--ease), color 0.25s var(--ease);
 }
 .tab.on {
-  background: #07c160;
-  color: #fff;
+  /* 与采集端主操作同一套品牌渐变（见 home/profile/login 的 .btn-primary） */
+  background: linear-gradient(135deg, var(--brand-lt), var(--brand));
+  color: var(--on-brand);
+  font-weight: 600;
 }
 
+/* ------------------------------ 导出任务留存 ------------------------------ */
 .jobs-toggle {
   margin: 6rpx 4rpx 14rpx;
-  font-size: 23rpx;
-  color: #1989fa;
+  font-size: var(--fs-2);
+  color: var(--brand);
 }
 .job {
-  background: #fff;
-  border-radius: 12rpx;
+  background: var(--card);
+  border-radius: var(--r-lg);
+  box-shadow: var(--sd);
   padding: 20rpx 22rpx;
   margin-bottom: 12rpx;
 }
@@ -62,40 +82,44 @@
   justify-content: space-between;
 }
 .job-id {
-  font-size: 24rpx;
-  color: #333;
+  font-size: var(--fs-3);
+  color: var(--t2);
   font-family: monospace;
 }
 .job-status {
-  font-size: 22rpx;
-  color: #888;
+  font-size: var(--fs-2);
+  color: var(--t3);
 }
 .job-status.done {
-  color: #07c160;
+  color: var(--green);
 }
 .job-status.failed {
-  color: #e64340;
+  color: var(--red);
 }
 .job-status.expired {
-  color: #bbb;
+  color: var(--t4);
 }
 .job-meta {
   display: flex;
   flex-wrap: wrap;
   margin-top: 10rpx;
-  font-size: 22rpx;
-  color: #999;
+  font-size: var(--fs-2);
+  color: var(--t3);
+}
+.job-meta > text {
+  margin: 0 20rpx 8rpx 0;
 }
 .job-meta .bad {
-  color: #e64340;
+  color: var(--red);
 }
 
+/* ------------------------------ 日志卡片 ------------------------------ */
 .card {
-  background: #fff;
-  border-radius: 14rpx;
+  background: var(--card);
+  border-radius: var(--r-lg);
+  box-shadow: var(--sd);
   padding: 22rpx 24rpx;
   margin-bottom: 16rpx;
-  box-shadow: 0 2rpx 10rpx rgba(0, 0, 0, 0.04);
 }
 .card-head {
   display: flex;
@@ -103,16 +127,13 @@
   justify-content: space-between;
 }
 .action {
-  font-size: 28rpx;
+  font-size: var(--fs-5);
   font-weight: 600;
-  color: #222;
+  color: var(--t1);
 }
 .time {
-  font-size: 22rpx;
-  color: #aaa;
-}
-.job-meta > text {
-  margin: 0 20rpx 8rpx 0;
+  font-size: var(--fs-2);
+  color: var(--t3);
 }
 .who {
   display: flex;
@@ -123,80 +144,47 @@
   margin-left: 14rpx;
 }
 .operator {
-  font-size: 25rpx;
-  color: #333;
+  font-size: var(--fs-3);
+  color: var(--t2);
 }
 .role {
-  font-size: 20rpx;
-  color: #1989fa;
-  background: #eef5ff;
-  border-radius: 6rpx;
+  font-size: var(--fs-1);
+  color: var(--brand);
+  background: var(--brand-soft);
+  border-radius: var(--r-sm);
   padding: 2rpx 12rpx;
 }
 .target {
   margin-top: 10rpx;
-  font-size: 23rpx;
-  color: #888;
+  font-size: var(--fs-2);
+  color: var(--t3);
   word-break: break-all;
 }
 .detail {
   margin-top: 10rpx;
-  font-size: 22rpx;
-  color: #999;
+  font-size: var(--fs-2);
+  color: var(--t3);
   line-height: 1.5;
   word-break: break-all;
 }
 
+/* ------------------------------ 空态 / 分页 ------------------------------ */
 .tip {
   text-align: center;
-  color: #999;
+  color: var(--t3);
   margin-top: 60rpx;
-  font-size: 26rpx;
+  font-size: var(--fs-4);
 }
 .tip.small {
   margin-top: 20rpx;
-  font-size: 23rpx;
+  font-size: var(--fs-2);
 }
 .more {
   text-align: center;
-  color: #1989fa;
-  font-size: 25rpx;
+  color: var(--brand);
+  font-size: var(--fs-3);
   padding: 22rpx 0;
 }
 .more.done {
-  color: #ccc;
-}
-
-/* ============ 统一视觉主题：与底部导航一致的圆角 / 阴影 / 品牌色 ============ */
-.page {
-  background: var(--bg);
-}
-.card,
-.job {
-  border-radius: var(--r-lg);
-  box-shadow: var(--sd);
-}
-.card {
-  background: var(--card);
-}
-.tab {
-  color: var(--t2);
-  box-shadow: var(--sd);
-  transition: background 0.25s var(--ease), color 0.25s var(--ease);
-}
-.tab.on {
-  background: linear-gradient(135deg, #2b8cff, #58b6ff);
-  font-weight: 600;
-}
-.clean-btn,
-.jobs-toggle,
-.more {
-  color: var(--brand);
-}
-.action {
-  color: var(--t1);
-}
-.role {
-  color: var(--brand);
-  background: var(--brand-soft);
+  color: var(--t4);
 }

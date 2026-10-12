@@ -13,7 +13,7 @@
   overflow: hidden;
   border-radius: var(--r-xl);
   padding: 38rpx 32rpx;
-  background: linear-gradient(135deg, #2b7cff 0%, #5a86ff 48%, #7c6cff 100%);
+  background: linear-gradient(135deg, var(--brand) 0%, var(--brand-2) 48%, var(--violet) 100%);
   box-shadow: 0 16rpx 40rpx rgba(58, 108, 255, 0.28);
   margin-bottom: 22rpx;
 }
@@ -46,12 +46,12 @@
   border-radius: 50%;
   flex-shrink: 0;
   background: rgba(255, 255, 255, 0.94);
-  color: #2b7cff;
-  font-size: 44rpx;
+  color: var(--brand);
+  font-size: var(--fs-10);
   font-weight: 600;
   line-height: 108rpx;
   text-align: center;
-  box-shadow: 0 8rpx 22rpx rgba(20, 40, 90, 0.2);
+  box-shadow: var(--sd-md);
 }
 .me-main {
   flex: 1;
@@ -59,9 +59,9 @@
   margin-left: 24rpx;
 }
 .me-name {
-  font-size: 36rpx;
+  font-size: var(--fs-8);
   font-weight: 600;
-  color: #fff;
+  color: var(--on-brand);
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -72,15 +72,15 @@
   align-items: center;
 }
 .role-chip {
-  font-size: 21rpx;
-  color: #fff;
+  font-size: var(--fs-1);
+  color: var(--on-brand);
   padding: 4rpx 18rpx;
-  border-radius: 20rpx;
+  border-radius: var(--r-pill);
   background: rgba(255, 255, 255, 0.26);
   margin-right: 14rpx;
 }
 .me-env {
-  font-size: 22rpx;
+  font-size: var(--fs-2);
   color: rgba(255, 255, 255, 0.82);
 }
 
@@ -95,12 +95,12 @@
   justify-content: space-between;
 }
 .pc-title {
-  font-size: 29rpx;
+  font-size: var(--fs-5);
   font-weight: 600;
   color: var(--t1);
 }
 .pc-sub {
-  font-size: 23rpx;
+  font-size: var(--fs-2);
   color: var(--t3);
 }
 .pc-body {
@@ -109,14 +109,14 @@
   margin-top: 20rpx;
 }
 .pc-num {
-  font-size: 68rpx;
+  font-size: var(--fs-13);
   font-weight: 700;
   color: var(--brand);
   line-height: 1;
   letter-spacing: -2rpx;
 }
 .pc-unit {
-  font-size: 26rpx;
+  font-size: var(--fs-4);
   font-weight: 600;
   margin-left: 4rpx;
 }
@@ -127,15 +127,15 @@
 }
 .bar {
   height: 14rpx;
-  border-radius: 8rpx;
-  background: #eef1f6;
+  border-radius: var(--r-xs);
+  background: var(--bg);
   overflow: hidden;
 }
 .bar-fill {
   height: 100%;
-  border-radius: 8rpx;
+  border-radius: var(--r-xs);
   transform-origin: left center;
-  background: linear-gradient(90deg, #58b6ff, #1a8cff);
+  background: linear-gradient(90deg, var(--brand-2), var(--brand));
   animation: barGrow 0.9s cubic-bezier(0.22, 0.9, 0.32, 1) backwards;
   transition: width 0.35s var(--ease);
 }
@@ -145,11 +145,11 @@
   margin-top: 16rpx;
 }
 .chip {
-  font-size: 21rpx;
+  font-size: var(--fs-1);
   color: var(--t2);
-  background: #f4f6fa;
+  background: var(--surface-2);
   padding: 5rpx 14rpx;
-  border-radius: 8rpx;
+  border-radius: var(--r-xs);
   margin: 0 12rpx 12rpx 0;
 }
 .chip.ok {
@@ -164,7 +164,7 @@
 /* ============================ 分组列表 ============================ */
 .group-title {
   margin: 8rpx 8rpx 14rpx;
-  font-size: 24rpx;
+  font-size: var(--fs-3);
   color: var(--t3);
   letter-spacing: 1rpx;
 }
@@ -186,35 +186,35 @@
   border-bottom: none;
 }
 .item-press {
-  background: #f7f9fc;
+  background: var(--surface-2);
   transform: scale(0.99);
 }
 .item-ico {
   width: 68rpx;
   height: 68rpx;
-  border-radius: 20rpx;
+  border-radius: var(--r-lg);
   flex-shrink: 0;
   text-align: center;
   line-height: 68rpx;
-  font-size: 32rpx;
-  color: #fff;
-  background: linear-gradient(135deg, #b9c3cf, #98a4b2);
+  font-size: var(--fs-7);
+  color: var(--on-brand);
+  background: linear-gradient(135deg, var(--t4), var(--t3));
 }
 .item-ico.blue {
-  background: linear-gradient(135deg, #4aa8ff, #1a8cff);
-  box-shadow: 0 8rpx 18rpx rgba(26, 140, 255, 0.24);
+  background: linear-gradient(135deg, var(--brand-lt), var(--brand));
+  box-shadow: var(--sd-brand);
 }
 .item-ico.green {
-  background: linear-gradient(135deg, #35d07f, #07c160);
-  box-shadow: 0 8rpx 18rpx rgba(7, 193, 96, 0.22);
+  background: linear-gradient(135deg, var(--green-2), var(--green));
+  box-shadow: var(--sd-green);
 }
 .item-ico.violet {
-  background: linear-gradient(135deg, #a58bff, #7c5cff);
-  box-shadow: 0 8rpx 18rpx rgba(124, 92, 255, 0.22);
+  background: linear-gradient(135deg, var(--violet-2), var(--violet));
+  box-shadow: var(--sd-violet);
 }
 .item-ico.amber {
-  background: linear-gradient(135deg, #ffb340, #ff9500);
-  box-shadow: 0 8rpx 18rpx rgba(255, 149, 0, 0.22);
+  background: linear-gradient(135deg, var(--amber-2), var(--amber));
+  box-shadow: var(--sd-amber);
 }
 .item-body {
   flex: 1;
@@ -222,17 +222,17 @@
   margin-left: 20rpx;
 }
 .item-label {
-  font-size: 29rpx;
+  font-size: var(--fs-5);
   color: var(--t1);
 }
 .item-desc {
   margin-top: 6rpx;
-  font-size: 22rpx;
+  font-size: var(--fs-2);
   color: var(--t3);
 }
 .item-arrow {
   color: var(--t4);
-  font-size: 36rpx;
+  font-size: var(--fs-8);
   margin-left: 12rpx;
 }
 
@@ -246,7 +246,7 @@
   justify-content: center;
   background: var(--card);
   color: var(--red);
-  font-size: 30rpx;
+  font-size: var(--fs-6);
   border-radius: var(--r-lg);
   box-shadow: var(--sd);
   transition: transform 0.18s var(--ease), background 0.18s var(--ease);
@@ -261,6 +261,6 @@
 .version {
   margin-top: 26rpx;
   text-align: center;
-  font-size: 22rpx;
+  font-size: var(--fs-2);
   color: var(--t4);
 }

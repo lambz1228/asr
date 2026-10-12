@@ -1,5 +1,5 @@
 page {
-  background: #eef1f6;
+  background: var(--bg);
 }
 .page {
   min-height: 100vh;
@@ -14,13 +14,13 @@ page {
   padding: 16rpx 4rpx 22rpx;
 }
 .title {
-  font-size: 38rpx;
+  font-size: var(--fs-8);
   font-weight: 600;
   color: var(--t1);
 }
 .subtitle {
   margin-top: 10rpx;
-  font-size: 24rpx;
+  font-size: var(--fs-3);
   color: var(--red);
 }
 
@@ -35,13 +35,13 @@ page {
   margin-bottom: 24rpx;
 }
 .doc-h {
-  font-size: 30rpx;
+  font-size: var(--fs-6);
   font-weight: 600;
   color: var(--t1);
   margin-bottom: 10rpx;
 }
 .doc-p {
-  font-size: 27rpx;
+  font-size: var(--fs-4);
   line-height: 1.7;
   color: var(--t2);
 }
@@ -55,12 +55,12 @@ page {
   align-items: center;
   justify-content: center;
   padding: 20rpx 0 4rpx;
-  font-size: 25rpx;
-  color: #576b95;
+  font-size: var(--fs-3);
+  color: var(--brand);
 }
 .privacy-link .arrow {
   margin-left: 6rpx;
-  font-size: 30rpx;
+  font-size: var(--fs-6);
   line-height: 1;
 }
 
@@ -70,7 +70,7 @@ page {
 .agree-label {
   display: flex;
   align-items: center;
-  font-size: 27rpx;
+  font-size: var(--fs-4);
   color: var(--t1);
 }
 
@@ -93,9 +93,9 @@ page {
   align-items: center;
   justify-content: center;
   border-radius: var(--r-lg);
-  background: linear-gradient(135deg, #20d47a, #07c160);
-  color: #fff;
-  font-size: 32rpx;
+  background: linear-gradient(135deg, var(--green-2), var(--green));
+  color: var(--on-brand);
+  font-size: var(--fs-7);
   font-weight: 600;
   box-shadow: 0 14rpx 32rpx rgba(7, 193, 96, 0.28);
   transition: transform 0.18s var(--ease);
@@ -105,7 +105,7 @@ page {
 }
 .btn-primary[disabled] {
   background: #b7e4cb;
-  color: #fff;
+  color: var(--on-brand);
   box-shadow: none;
 }
 .btn-row {
@@ -125,7 +125,7 @@ page {
   background: var(--card);
   color: var(--t1);
   border-radius: var(--r-lg);
-  font-size: 28rpx;
+  font-size: var(--fs-5);
   box-shadow: var(--sd);
   transition: transform 0.18s var(--ease);
 }

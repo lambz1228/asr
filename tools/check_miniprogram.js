@@ -337,6 +337,65 @@ for (const f of walk(ROOT, (n) => n.endsWith('.wxml'))) {
 }
 ok('全量数组未直接进入 data / wx:for')
 
+console.log('== 9. 视觉令牌对齐（字号 / 圆角 / 颜色一律引用 app.wxss 令牌） ==')
+// 令牌只在 app.wxss 定义，页面只引用。硬编码会让「改一处、全局生效」失效，
+// 管理端分包页历史上就是这样悄悄退回旧 Vant 色板（#1989fa/#e64340/#f5f5f5/#999…）。
+// 这些字面量是刻意的亮度斜坡 / 一次性装饰色，收敛会破坏原效果，故白名单放行；
+// 清单与 tools/audit_ui_tokens.py 的 INTENTIONAL 保持一致。
+const ALLOWED_HEX = new Set([
+  '#3ea3ff', '#6dc4ff', // 首页/资源页头部三段渐变的中间与末端斜坡
+  '#fffaf0', // 琥珀渐变亮端
+  '#e9f3ff', '#f4f8fd', // 登录页背景三段渐变
+  '#eef6ff', '#ddeafc', // 资源页卡片渐变两端
+  '#a9741f', '#d9a44e', // 公告面板琥珀文字阶梯
+  '#b7e4cb', // 同意书主按钮禁用态浅绿
+])
+const appWxssSrc = fs.readFileSync(path.join(ROOT, 'app.wxss'), 'utf8')
+const fsTokens = [...appWxssSrc.matchAll(/--(fs-\d+)\s*:/g)].map((m) => m[1])
+fsTokens.length >= 15
+  ? ok(`字号阶梯已定义 ${fsTokens.length} 档（--fs-1 … --fs-${fsTokens.length}）`)
+  : fail(`app.wxss 字号阶梯只有 ${fsTokens.length} 档，应至少 15 档（--fs-1 … --fs-15）`)
+
+let tokenIssues = 0
+for (const f of styleFiles) {
+  if (rel(f) === 'app.wxss') continue
+  const raw = fs
+    .readFileSync(f, 'utf8')
+    .replace(/\/\*[\s\S]*?\*\//g, (m) => m.replace(/[^\n]/g, ' '))
+  const where = (i) => `${rel(f)}:${i}`
+  const lines = raw.split(/\r?\n/)
+  lines.forEach((line, idx) => {
+    const t = line.trim()
+    // 字号：只接受 var(--fs-N)。裸令牌名（如 `font-size: --fs-8`）是无效 CSS，
+    // 会让字号静默退回默认值 —— 必须按错误拦下，不能只看有没有 rpx 字面量。
+    const fsM = t.match(/^font-size:\s*(.+);$/)
+    if (fsM && !/^var\(--fs-\d+\)$/.test(fsM[1])) {
+      tokenIssues += 1
+      fail(`${where(idx + 1)} font-size 未走令牌（${fsM[1]}）—— 必须写成 var(--fs-N)`)
+    }
+    // 圆角：var(--r-*) / 纯百分比 / 全 0 三种合法，其余（含裸 --r-*）一律报错
+    const rM = t.match(/^border-radius:\s*(.+);$/)
+    if (rM) {
+      const v = rM[1].trim()
+      const parts = v.split(/\s+/)
+      // 合法：单值 var(--r-*)、纯百分比（圆形/胶囊）、或由 0 与 var(--r-*) 组成的多值
+      const okToken = parts.every((p) => p === '0' || /^var\(--r-[a-z]+\)$/.test(p))
+      const okPct = /^[0-9.]+%([ ]+[0-9.]+%)*$/.test(v)
+      if (!okToken && !okPct) {
+        tokenIssues += 1
+        fail(`${where(idx + 1)} border-radius 未走令牌（${v}）—— 必须写成 var(--r-*)`)
+      }
+    }
+    for (const m of t.matchAll(/#[0-9a-fA-F]{3,8}\b/g)) {
+      if (!ALLOWED_HEX.has(m[0].toLowerCase())) {
+        tokenIssues += 1
+        fail(`${where(idx + 1)} 出现未令牌化的色值 ${m[0]} —— 请改用 var(--token)，或加入白名单并写明理由`)
+      }
+    }
+  })
+}
+tokenIssues === 0 ? ok('字号 / 圆角 / 颜色已全部走设计令牌') : null
+
 console.log('')
 console.log(`检查完成：${errors.length} 个错误，${warns.length} 个警告`)
 process.exit(errors.length ? 1 : 0)

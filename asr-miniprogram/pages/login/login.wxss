@@ -1,5 +1,5 @@
 page {
-  background: #eef1f6;
+  background: var(--bg);
 }
 .page {
   position: relative;
@@ -7,7 +7,7 @@ page {
   min-height: 100vh;
   box-sizing: border-box;
   padding: 110rpx 44rpx 60rpx;
-  background: linear-gradient(180deg, #e9f3ff 0%, #f4f8fd 44%, #eef1f6 100%);
+  background: linear-gradient(180deg, #e9f3ff 0%, #f4f8fd 44%, var(--bg) 100%);
 }
 
 /* 背景装饰光斑 */
@@ -52,8 +52,8 @@ page {
   width: 136rpx;
   height: 136rpx;
   margin: 0 auto;
-  border-radius: 42rpx;
-  background: linear-gradient(135deg, #2b8cff, #58b6ff);
+  border-radius: var(--r-xl);
+  background: linear-gradient(135deg, var(--brand), var(--brand-2));
   box-shadow: 0 18rpx 40rpx rgba(26, 140, 255, 0.34);
   animation: popIn 0.62s cubic-bezier(0.22, 0.9, 0.32, 1) backwards;
 }
@@ -64,8 +64,8 @@ page {
   margin-left: -13rpx;
   width: 26rpx;
   height: 46rpx;
-  border-radius: 13rpx;
-  background: #fff;
+  border-radius: var(--r-sm);
+  background: var(--card);
 }
 .logo-stand {
   position: absolute;
@@ -75,20 +75,20 @@ page {
   width: 64rpx;
   height: 40rpx;
   box-sizing: border-box;
-  border: 6rpx solid #fff;
+  border: 6rpx solid var(--on-brand);
   border-top: 0;
-  border-radius: 0 0 40rpx 40rpx;
+  border-radius: 0 0 var(--r-xl) var(--r-xl);
 }
 .title {
   margin-top: 30rpx;
-  font-size: 44rpx;
+  font-size: var(--fs-10);
   font-weight: 600;
   color: var(--t1);
   letter-spacing: 1rpx;
 }
 .subtitle {
   margin-top: 12rpx;
-  font-size: 24rpx;
+  font-size: var(--fs-3);
   color: var(--t3);
 }
 
@@ -103,18 +103,18 @@ page {
   margin-left: 12rpx;
 }
 .tab-chip {
-  font-size: 21rpx;
+  font-size: var(--fs-1);
   color: var(--t3);
   background: rgba(255, 255, 255, 0.86);
-  border-radius: 20rpx;
+  border-radius: var(--r-pill);
   padding: 8rpx 18rpx;
-  box-shadow: 0 4rpx 14rpx rgba(20, 33, 56, 0.05);
+  box-shadow: var(--sd);
 }
 .tab-chip.active {
-  color: #fff;
+  color: var(--on-brand);
   font-weight: 600;
-  background: linear-gradient(135deg, #2b8cff, #58b6ff);
-  box-shadow: 0 8rpx 20rpx rgba(26, 140, 255, 0.3);
+  background: linear-gradient(135deg, var(--brand), var(--brand-2));
+  box-shadow: var(--sd-brand);
 }
 
 /* 能力卡片 */
@@ -138,24 +138,24 @@ page {
 .feat-ico {
   width: 64rpx;
   height: 64rpx;
-  border-radius: 20rpx;
+  border-radius: var(--r-lg);
   flex-shrink: 0;
   text-align: center;
   line-height: 64rpx;
-  font-size: 30rpx;
-  color: #fff;
+  font-size: var(--fs-6);
+  color: var(--on-brand);
 }
 .feat-ico.blue {
-  background: linear-gradient(135deg, #4aa8ff, #1a8cff);
-  box-shadow: 0 8rpx 18rpx rgba(26, 140, 255, 0.26);
+  background: linear-gradient(135deg, var(--brand-lt), var(--brand));
+  box-shadow: var(--sd-brand);
 }
 .feat-ico.green {
-  background: linear-gradient(135deg, #35d07f, #07c160);
-  box-shadow: 0 8rpx 18rpx rgba(7, 193, 96, 0.22);
+  background: linear-gradient(135deg, var(--green-2), var(--green));
+  box-shadow: var(--sd-green);
 }
 .feat-ico.violet {
-  background: linear-gradient(135deg, #a58bff, #7c5cff);
-  box-shadow: 0 8rpx 18rpx rgba(124, 92, 255, 0.22);
+  background: linear-gradient(135deg, var(--violet-2), var(--violet));
+  box-shadow: var(--sd-violet);
 }
 .feat-body {
   flex: 1;
@@ -163,13 +163,13 @@ page {
   margin-left: 20rpx;
 }
 .feat-t {
-  font-size: 28rpx;
+  font-size: var(--fs-5);
   font-weight: 600;
   color: var(--t1);
 }
 .feat-d {
   margin-top: 6rpx;
-  font-size: 22rpx;
+  font-size: var(--fs-2);
   color: var(--t3);
 }
 
@@ -182,9 +182,9 @@ page {
   align-items: center;
   justify-content: center;
   border-radius: var(--r-lg);
-  background: linear-gradient(135deg, #20d47a, #07c160);
-  color: #fff;
-  font-size: 32rpx;
+  background: linear-gradient(135deg, var(--green-2), var(--green));
+  color: var(--on-brand);
+  font-size: var(--fs-7);
   font-weight: 600;
   box-shadow: 0 14rpx 32rpx rgba(7, 193, 96, 0.3);
   animation: riseIn 0.5s cubic-bezier(0.22, 0.9, 0.32, 1) 0.24s backwards;
@@ -196,7 +196,7 @@ page {
 .dev-tip {
   margin: 32rpx 0 16rpx;
   text-align: center;
-  font-size: 22rpx;
+  font-size: var(--fs-2);
   color: var(--t4);
   animation: riseIn 0.5s cubic-bezier(0.22, 0.9, 0.32, 1) 0.3s backwards;
 }
@@ -209,8 +209,8 @@ page {
   justify-content: center;
   border-radius: var(--r-lg);
   background: rgba(255, 255, 255, 0.9);
-  color: #576b95;
-  font-size: 28rpx;
+  color: var(--brand);
+  font-size: var(--fs-5);
   box-shadow: var(--sd);
   animation: riseIn 0.5s cubic-bezier(0.22, 0.9, 0.32, 1) 0.34s backwards;
   transition: transform 0.18s var(--ease);
@@ -224,6 +224,6 @@ page {
 .footer {
   margin-top: 36rpx;
   text-align: center;
-  font-size: 21rpx;
+  font-size: var(--fs-1);
   color: var(--t4);
 }
