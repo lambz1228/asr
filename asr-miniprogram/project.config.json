@@ -1,7 +1,7 @@
 {
   "miniprogramRoot": "./",
   "projectname": "asr-collector",
-  "appid": "wx43432dad19c9d452",
+  "appid": "wx09f45a5e5c193085",
   "description": "ASR 音频采集小程序骨架",
   "setting": {
     "urlCheck": false,
