@@ -50,11 +50,19 @@ TEXTS = [
 ]
 STATUS_TEXT = {'claimed': '待录制', 'rejected': '已退回', 'approved': '已通过'}
 
-TABBAR = [
+# 底部导航两套列表，必须与 asr-miniprogram/custom-tab-bar/index.js 保持一致。
+# 项数按角色变（采集员 4 / 管理员 2），高亮块轨道宽 = 100/项数，是内联下发的，
+# 所以这里渲染时也要把宽度带上（wxss 里已经没有 width 了）。
+TABBAR_COLLECTOR = [
     ('首页', 'home', False),
     ('学习资源', 'resources', True),
     ('语言采集', 'record', False),
     ('我的', 'mine', False),
+]
+
+TABBAR_MANAGER = [
+    ('任务管理', 'home', True),
+    ('个人中心', 'mine', False),
 ]
 
 
@@ -126,8 +134,9 @@ def faq_html():
 
 
 def tabbar_html():
+    """学习资源页（采集员视角）底部那条 tabBar"""
     items = []
-    for i, (txt, icon, on) in enumerate(TABBAR):
+    for i, (txt, icon, on) in enumerate(TABBAR_COLLECTOR):
         items.append(
             '    <div class="item%s"><div class="ico-wrap"><img class="ico" src="%s" /></div>'
             '<div class="txt">%s</div></div>' % (' on' if on else '', icon_data(icon + ('-on' if on else '')), txt)
@@ -136,38 +145,44 @@ def tabbar_html():
 
 
 def blob_idx():
-    """当前选中项下标（高亮块的 translateX 为 idx*100%，轨道宽 = 1/4 栏宽）"""
-    for i, (_, _, on) in enumerate(TABBAR):
+    """采集员那套里当前选中项下标（高亮块 translateX = idx*100%，轨道宽 = 100/项数）"""
+    for i, (_, _, on) in enumerate(TABBAR_COLLECTOR):
         if on:
             return i
     return 0
 
 
 def tabbar_strip_html():
-    """4 个下标各渲染一条 tabBar，用来验证 transform 版高亮块的落点是否正确。
+    """两套列表的**每个下标**各渲染一条 tabBar，验证 transform 版高亮块的落点。
 
     这里一律按「静止态」渲染（no-anim，即关掉 transition）——真机上切页时
     高亮块就是这个状态：新页面首个渲染帧就已经在正确位置，不播过渡。
     过渡只用于点击离场那一次，静态预览无法体现，故不在此模拟。
+
+    轨道宽必须内联写出来：wxss 里的 .blob-track 已经不写 width 了，
+    宽度是随列表长度下发的（custom-tab-bar/index.js 的 trackW）。
     """
     out = []
-    for i, (txt, _, _) in enumerate(TABBAR):
-        items = []
-        for j, (t, icon, _) in enumerate(TABBAR):
-            on = j == i
-            items.append(
-                '      <div class="item%s"><div class="ico-wrap"><img class="ico" src="%s" /></div>'
-                '<div class="txt">%s</div></div>' % (' on' if on else '', icon_data(icon + ('-on' if on else '')), t)
+    for role, tabs in (('采集员（4 项）', TABBAR_COLLECTOR), ('管理员 / 审核员（2 项）', TABBAR_MANAGER)):
+        out.append('  <div class="strip-title">%s</div>' % role)
+        track_w = 100 // len(tabs)
+        for i, (txt, _, _) in enumerate(tabs):
+            items = []
+            for j, (t, icon, _) in enumerate(tabs):
+                on = j == i
+                items.append(
+                    '      <div class="item%s"><div class="ico-wrap"><img class="ico" src="%s" /></div>'
+                    '<div class="txt">%s</div></div>' % (' on' if on else '', icon_data(icon + ('-on' if on else '')), t)
+                )
+            out.append(
+                '  <div class="bar-demo">\n'
+                '    <div class="bar">\n'
+                '      <div class="blob-track no-anim" style="width: %d%%; transform: translateX(%d%%)"><div class="blob"></div></div>\n'
+                '%s\n'
+                '    </div>\n'
+                '    <div class="bar-demo-label">blobIdx = %d → %s（静止态・no-anim，轨道宽 %d%%）</div>\n'
+                '  </div>' % (track_w, i * 100, '\n'.join(items), i, txt, track_w)
             )
-        out.append(
-            '  <div class="bar-demo">\n'
-            '    <div class="bar">\n'
-            '      <div class="blob-track no-anim" style="transform: translateX(%d%%)"><div class="blob"></div></div>\n'
-            '%s\n'
-            '    </div>\n'
-            '    <div class="bar-demo-label">blobIdx = %d → %s（静止态・no-anim）</div>\n'
-            '  </div>' % (i * 100, '\n'.join(items), i, txt)
-        )
     return ('<div class="strip">\n'
             '  <div class="strip-title">底部导航高亮块落点校验（transform 版，逐个下标）</div>\n'
             + '\n'.join(out) + '\n'

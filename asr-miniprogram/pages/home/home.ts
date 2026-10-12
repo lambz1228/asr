@@ -1,7 +1,7 @@
 import { request } from '../../utils/request'
 import { getMe } from '../../utils/auth'
 import { getConsentStatus } from '../../utils/consent'
-import { goRecordTab } from '../../utils/nav'
+import { goRecordTab, applyTitle } from '../../utils/nav'
 import {
   cachedFetch,
   invalidate,
@@ -173,6 +173,9 @@ Page({
     try {
       const me = await getMe()
       const isManager = me.role === 'admin' || me.role === 'reviewer'
+      // 同一页两个角色文案不同（首页 / 任务管理）：tabBar 的文字由组件按角色给，
+      // 导航栏标题得自己跟着设，否则会出现「tab 写着任务管理、标题写着首页」
+      applyTitle('home', isManager)
       this.setData({
         role: me.role,
         roleText: ROLE_TEXT[me.role] || me.role,

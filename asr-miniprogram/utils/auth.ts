@@ -32,11 +32,27 @@ export function logout() {
   wx.removeStorageSync('token')
   // 退出后必须清缓存，否则换账号登录会读到上一个身份的数据
   invalidate()
+  // 角色也一并清掉：不清的话，退出过程中若已经渲染出 tabBar，
+  // 会按上一个身份的那套导航显示（采集员看到一个管理员的 2 项导航）
+  rememberRole('')
 }
 
 export interface MeResult {
   userId: string
   role: string
+}
+
+// 把角色落到「同步可读」的地方，供自定义 tabBar 在**首帧**决定渲染几项导航。
+// 为什么不能只用缓存层（utils/cache）：那层是纯内存的、冷启动时为空，
+// 而 tabBar 的 attached 等不了 /auth/me 的异步返回。所以另存两处：
+//   globalData.role  —— 本会话内同步可读
+//   Storage 'role'   —— 跨启动兜底（app.ts onLaunch 会读回来）
+// 角色变化后 tabBar 的 show 生命周期会复核并换列表，不需要页面主动通知。
+export function rememberRole(role: string) {
+  const app = getApp<any>()
+  if (app && app.globalData) app.globalData.role = role || ''
+  if (role) wx.setStorageSync('role', role)
+  else wx.removeStorageSync('role')
 }
 
 // 获取当前用户角色，用于决定是否展示审核台等管理入口。
@@ -46,14 +62,17 @@ export async function getMe(): Promise<MeResult> {
   const r = await cachedFetch<MeResult>(KEY.me, TTL_ME, () =>
     request<MeResult>({ url: '/auth/me', method: 'GET' })
   )
+  rememberRole(r.data.role)
   return r.data
 }
 
 /** 下拉刷新用：强制绕过缓存重新取角色 */
 export async function reloadMe(): Promise<MeResult> {
-  return refreshFetch<MeResult>(KEY.me, TTL_ME, () =>
+  const r = await refreshFetch<MeResult>(KEY.me, TTL_ME, () =>
     request<MeResult>({ url: '/auth/me', method: 'GET' })
   )
+  rememberRole(r.role)
+  return r
 }
 
 export type LoginRoute = 'manager' | 'collector'

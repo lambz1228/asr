@@ -144,12 +144,52 @@ if (app.tabBar && app.tabBar.custom) {
     ? fail('custom-tab-bar 存在 setTimeout 补位（会把高亮块拖到下一页面上再滑）')
     : ok('custom-tab-bar 无延时补位')
 
-  // 3) tab 顺序必须与 app.json 的 tabBar.list 完全一致（不一致会导致高亮/跳转错位）
-  const cbPaths = [...cbJs.matchAll(/pagePath:\s*'([^']+)'/g)].map((m) => m[1])
+  // 3) 组件里是**两套列表**（采集员 4 项 / 管理员 2 项），两套都必须与 app.json 的
+  //    tabBar.list 同序：顺序不一致会让高亮落点与 switchTab 目标错位。
+  //    项数变了还必须同步改高亮块轨道宽（否则其中一套的高亮会落偏），所以一并钉住。
+  //    ⚠️ app.json 必须保留全部 4 项 —— 只有声明在 tabBar.list 里的页面才能 switchTab，
+  //    裁剪只发生在渲染层。
   const appPaths = (app.tabBar.list || []).map((i) => '/' + i.pagePath)
-  cbPaths.join(',') === appPaths.join(',')
-    ? ok(`custom-tab-bar tab 顺序与 app.json 一致（${cbPaths.length} 项）`)
-    : fail(`custom-tab-bar tab 顺序与 app.json 不一致：组件 ${cbPaths.join(',')} / app.json ${appPaths.join(',')}`)
+  const lists = {}
+  for (const m of cbJs.matchAll(/const\s+LIST_([A-Z]+)\s*=\s*\[([\s\S]*?)\n\]/g)) {
+    lists[m[1].toLowerCase()] = [...m[2].matchAll(/pagePath:\s*'([^']+)'/g)].map((x) => x[1])
+  }
+  const cbCollector = lists.collector || []
+  const cbManager = lists.manager || []
+  const ascInApp = (arr) =>
+    arr.every((p, i) => i === 0 || appPaths.indexOf(arr[i - 1]) < appPaths.indexOf(p))
+  const allInApp = (arr) => arr.length > 0 && arr.every((p) => appPaths.includes(p))
+
+  cbCollector.length === 4 && cbManager.length === 2
+    ? ok(`custom-tab-bar 两套列表项数正确（采集员 ${cbCollector.length} / 管理员 ${cbManager.length}）`)
+    : fail(`custom-tab-bar 两套列表项数不对：采集员 ${cbCollector.length} 项、管理员 ${cbManager.length} 项（应为 4 / 2）`)
+
+  allInApp(cbCollector) && ascInApp(cbCollector) && allInApp(cbManager) && ascInApp(cbManager)
+    ? ok('custom-tab-bar 两套列表都与 app.json 同序')
+    : fail(`custom-tab-bar 列表与 app.json 不一致：采集员 [${cbCollector.join(',')}] / 管理员 [${cbManager.join(',')}] / app.json [${appPaths.join(',')}]`)
+
+  const covered = appPaths.every((p) => cbCollector.includes(p) || cbManager.includes(p))
+  covered
+    ? ok('两套列表合起来覆盖 app.json 全部 tab')
+    : fail('两套列表没覆盖 app.json 里声明的 tab（漏掉的页面采集员切不过去）：' + appPaths.filter((p) => !cbCollector.includes(p) && !cbManager.includes(p)).join(','))
+
+  // 高亮块轨道宽必须由列表长度算出 —— 写死在 wxss 里必然有一套落偏
+  ;/trackW:\s*100\s*\/\s*list\.length/.test(cbJs)
+    ? ok('高亮块轨道宽由列表长度算出（100 / list.length）')
+    : fail('custom-tab-bar 的高亮块轨道宽没有跟列表长度联动，两套列表里必有一套落偏')
+  cbWxml.includes('trackW')
+    ? ok('custom-tab-bar wxml 内联 trackW')
+    : fail('custom-tab-bar wxml 未内联 trackW（宽度写死在 wxss 里会落偏）')
+  ;/\.blob-track\s*\{[^}]*width:/.test(cbWxss)
+    ? fail('custom-tab-bar wxss 给 .blob-track 写死了 width（项数按角色变，宽度只能内联下发）')
+    : ok('custom-tab-bar wxss 未写死轨道宽')
+
+  // 角色必须**同步**可读，组件才可能在首帧决定渲染几项。
+  // 行首必须带分号：上一句是三元表达式且不以分号结尾，否则这里的正则字面量
+  // 会被 ASI 当成除法继续上一句（本项目已踩过一次，见档案 §2.2）。
+  ;/globalData\.role|getStorageSync\('role'\)/.test(cbJs)
+    ? ok('custom-tab-bar 的角色取自同步可读的位置（globalData / Storage）')
+    : fail('custom-tab-bar 没有从同步位置读角色 —— 首帧等不了异步请求，会先渲染错的一套导航')
 
   // 4) 首帧必须禁过渡：anim 默认 false + wxml 绑 no-anim + wxss 关掉 transition
   ;/anim:\s*false/.test(cbJs)

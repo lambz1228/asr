@@ -1,11 +1,13 @@
 <view class="bar">
-  <!-- 活动项高亮块：整体走 transform 过渡（合成层，不触发重排），
-       track 宽 = 1/4 栏宽，第 i 项即 translateX(i * 100%)。
+  <!-- 活动项高亮块：整体走 transform 过渡（合成层，不触发重排）。
+       track 宽 = 100/项数（由 data.trackW 内联下发：采集员 4 项 ⇒ 25%，
+       管理员 2 项 ⇒ 50%），第 i 项即 translateX(i * 100%)。
+       宽度必须跟着列表走，写死在 wxss 里会让管理员那套高亮块落偏。
        anim=false（首帧 / 页面重新显示）时禁掉过渡：位置必须一帧到位，
        不能从上一项滑过来，否则页面已经切好了高亮块还在路上。 -->
   <view
     class="blob-track {{anim ? '' : 'no-anim'}}"
-    style="transform: translateX({{blobIdx * 100}}%)"
+    style="width: {{trackW}}%; transform: translateX({{blobIdx * 100}}%)"
   >
     <view class="blob"></view>
   </view>

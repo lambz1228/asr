@@ -70,7 +70,7 @@
       <view class="item-ico violet">⌂</view>
       <view class="item-body">
         <view class="item-label">我的工作台</view>
-        <view class="item-desc">回到「首页」查看进度与任务</view>
+        <view class="item-desc">回到{{isManager ? '「任务管理」' : '「首页」'}}查看进度与任务</view>
       </view>
       <view class="item-arrow">›</view>
     </view>

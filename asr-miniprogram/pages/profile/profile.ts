@@ -1,7 +1,7 @@
 import { request } from '../../utils/request'
 import { getMe, logout, wxLogin, routeAfterLogin, isManagerRole } from '../../utils/auth'
 import { openPrivacyContract } from '../../utils/privacy'
-import { goRecordTab, goHomeTab } from '../../utils/nav'
+import { goRecordTab, goHomeTab, applyTitle } from '../../utils/nav'
 import { cachedFetch, invalidate, readCache, KEY, TTL_DATA } from '../../utils/cache'
 
 // 进度口径与服务端 app/stats.py 一致：完成率 = 已通过 / 总任务数
@@ -92,6 +92,9 @@ Page({
     try {
       const me = await getMe()
       const isManager = isManagerRole(me.role)
+      // 同一页两个角色文案不同（我的 / 个人中心）：tabBar 文字由组件按角色给，
+      // 导航栏标题得自己跟着设，否则会出现「tab 写着个人中心、标题写着我的」
+      applyTitle('profile', isManager)
       this.setData({
         userId: me.userId,
         role: me.role,
