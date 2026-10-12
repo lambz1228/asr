@@ -10,7 +10,6 @@
       <view class="logo-stand"></view>
     </view>
     <view class="title">ASR 语音采集</view>
-    <view class="subtitle">管理员与采集员共用同一套导航</view>
   </view>
 
   <!-- 底部导航预览 -->
@@ -45,15 +44,10 @@
       </view>
     </view>
   </view>
-
   <button class="login-btn" hover-class="login-press" loading="{{loading}}" bindtap="onLogin">
     微信登录（采集员）
   </button>
-
-  <view class="dev-tip">本地开发 · 可切换角色登录</view>
   <button class="admin-btn" hover-class="login-press" loading="{{loading}}" bindtap="onLoginAsAdmin">
     管理员登录（演示）
   </button>
-
-  <view class="footer">登录后按账号角色自动进入对应工作台</view>
 </view>
