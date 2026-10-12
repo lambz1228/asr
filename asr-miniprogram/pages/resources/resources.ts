@@ -26,9 +26,6 @@ const ROLE_TEXT: Record<string, string> = {
   collector: '采集员'
 }
 
-// 导入模板示例（与「任务导入格式说明.md」保持一致：两列 —— 序号 + 汉语文本）
-const TEMPLATE_SAMPLE = '序号,汉语文本\n1,今天天气很好，我们一起去公园散步。\n2,请把窗户关上，外面风有点大。'
-
 // 录音规范要点
 const RULES = [
   { icon: '🤫', title: '环境安静', desc: '关闭风扇 / 空调强风档，避免街噪与他人说话声' },
@@ -66,9 +63,10 @@ const FAQ = [
 // 文本库一次最多渲染多少条：任务量可能上千，全量渲染会直接卡住页面
 const TEXT_ROWS = 30
 
-// 学习资源：两个身份共用的「规范 + 素材」页
-//   采集员：录音规范、采集前自检、文本库检索（点按直进采集）、常见退回原因
-//   管理员：录音规范 + 导入格式说明 / 导出说明 / 审核入口
+// 学习资源：**只服务采集员**的「规范 + 自检」页
+//   录音规范、采集前自检（同意书状态 / 隐私协议）、文本库检索（点按直进采集）、常见退回原因。
+//   2026-10-12 起管理员底部导航收敛为「任务管理 · 个人中心」，进不来本页，
+//   原先挂在这里的导入格式说明 / 上线前检查项 / 审核台入口已随之删除。
 //
 // 性能约定：本页内容绝大部分是静态规范文案，真正依赖网络的只有角色与文本库。
 // 全量文本放实例属性 allTexts，data 里只放渲染用的前 30 条，避免整表塞进 setData。
@@ -78,7 +76,6 @@ Page({
     anim: '',
     role: '',
     roleText: '',
-    isManager: false,
     isCollector: false,
     consentSigned: true,
     rules: RULES,
@@ -89,8 +86,7 @@ Page({
     filtered: [] as TaskItem[],
     textCount: 0,
     shownCount: 0,
-    statusText: STATUS_TEXT,
-    templateSample: TEMPLATE_SAMPLE
+    statusText: STATUS_TEXT
   },
 
   allTexts: [] as TaskItem[],
@@ -118,9 +114,10 @@ Page({
       this.setData({
         role: me.role,
         roleText: ROLE_TEXT[me.role] || me.role,
-        isManager,
         isCollector: !isManager
       })
+      // 管理员已进不来本页（导航里没有它），这里只是防御：万一被别处 navigateTo 过来，
+      // 别把采集员的文本库塞给他看
       if (isManager) {
         this.allTexts = []
         this.setData({ filtered: [], textCount: 0, shownCount: 0 })
@@ -191,14 +188,5 @@ Page({
   },
   onPrivacy() {
     openPrivacyContract()
-  },
-  onCopyTemplate() {
-    wx.setClipboardData({
-      data: TEMPLATE_SAMPLE,
-      success: () => wx.showToast({ title: '模板示例已复制', icon: 'success' })
-    })
-  },
-  onReview() {
-    wx.navigateTo({ url: '/subpackages/admin/review/review' })
   }
 })

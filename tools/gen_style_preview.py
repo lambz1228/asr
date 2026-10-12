@@ -229,7 +229,7 @@ BODY_RESOURCES = """
 %(faq)s
     </div>
 
-    <div class="footer">ASR 语音采集 · 两个身份共用同一套导航与规范</div>
+    <div class="footer">ASR 语音采集 · 录音规范与采集前自检</div>
   </div>
   <div class="bar">
     <div class="blob-track" style="transform: translateX(%(blob_x)d%%)"><div class="blob"></div></div>
