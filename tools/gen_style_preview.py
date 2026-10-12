@@ -134,14 +134,40 @@ def faq_html():
 
 
 def tabbar_html():
-    """学习资源页（采集员视角）底部那条 tabBar"""
-    items = []
-    for i, (txt, icon, on) in enumerate(TABBAR_COLLECTOR):
-        items.append(
+    """采集员那套的 tab 项（学习资源页用）"""
+    return tab_items_html(TABBAR_COLLECTOR, blob_idx())
+
+
+def tab_items_html(tabs, selected):
+    out = []
+    for j, (t, icon, _) in enumerate(tabs):
+        on = j == selected
+        out.append(
             '    <div class="item%s"><div class="ico-wrap"><img class="ico" src="%s" /></div>'
-            '<div class="txt">%s</div></div>' % (' on' if on else '', icon_data(icon + ('-on' if on else '')), txt)
+            '<div class="txt">%s</div></div>' % (' on' if on else '', icon_data(icon + ('-on' if on else '')), t)
         )
-    return '\n'.join(items)
+    return '\n'.join(out)
+
+
+def bar_html(tabs, selected):
+    """一条完整的底部导航。
+
+    轨道宽必须**内联**写出来：真机上 .blob-track 的 width 来自 data.trackW
+    （= 100/项数，随角色变化），wxss 里已经不再有 width。预览若漏掉这一处，
+    绝对定位的轨道会被收缩成 0 宽 —— 高亮块直接消失，而且不报错，很难发现。
+    """
+    track_w = 100 // len(tabs)
+    return (
+        '  <div class="bar">\n'
+        '    <div class="blob-track" style="width: %d%%; transform: translateX(%d%%)"><div class="blob"></div></div>\n'
+        '%s\n'
+        '  </div>' % (track_w, selected * 100, tab_items_html(tabs, selected))
+    )
+
+
+def manager_bar_html():
+    """管理员那套底部导航，停在「任务管理」（第 0 项）"""
+    return bar_html(TABBAR_MANAGER, 0)
 
 
 def blob_idx():
@@ -152,18 +178,25 @@ def blob_idx():
     return 0
 
 
-def tabbar_strip_html():
-    """两套列表的**每个下标**各渲染一条 tabBar，验证 transform 版高亮块的落点。
+def tabbar_strip_html(roles='both'):
+    """各下标各渲染一条 tabBar，验证 transform 版高亮块的落点是否正确。
+
+    roles: 'collector' / 'manager' / 'both'（默认两套都出）。
+    每条预览页只画**它自己那套** —— 落点校验条是用来核对该页真实渲染的那一条。
 
     这里一律按「静止态」渲染（no-anim，即关掉 transition）——真机上切页时
     高亮块就是这个状态：新页面首个渲染帧就已经在正确位置，不播过渡。
     过渡只用于点击离场那一次，静态预览无法体现，故不在此模拟。
 
-    轨道宽必须内联写出来：wxss 里的 .blob-track 已经不写 width 了，
-    宽度是随列表长度下发的（custom-tab-bar/index.js 的 trackW）。
+    轨道宽同样必须内联：见 bar_html 的注释。
     """
+    groups = []
+    if roles in ('both', 'collector'):
+        groups.append(('采集员（4 项）', TABBAR_COLLECTOR))
+    if roles in ('both', 'manager'):
+        groups.append(('管理员 / 审核员（2 项）', TABBAR_MANAGER))
     out = []
-    for role, tabs in (('采集员（4 项）', TABBAR_COLLECTOR), ('管理员 / 审核员（2 项）', TABBAR_MANAGER)):
+    for role, tabs in groups:
         out.append('  <div class="strip-title">%s</div>' % role)
         track_w = 100 // len(tabs)
         for i, (txt, _, _) in enumerate(tabs):
@@ -231,13 +264,10 @@ BODY_RESOURCES = """
 
     <div class="footer">ASR 语音采集 · 录音规范与采集前自检</div>
   </div>
-  <div class="bar">
-    <div class="blob-track" style="transform: translateX(%(blob_x)d%%)"><div class="blob"></div></div>
-%(tabbar)s
-  </div>
+%(bar)s
 </div>
 """ % {'rules': rules_html(), 'texts': texts_html(), 'faq': faq_html(),
-   'tabbar': tabbar_html(), 'blob_x': blob_idx() * 100}
+   'bar': bar_html(TABBAR_COLLECTOR, blob_idx())}
 
 def admin_shell(navtitle, inner):
     return """
@@ -545,11 +575,128 @@ if (location.hash.indexOf('bottom') >= 0) {
 """
 
 
+def admin_home_inner():
+    """管理员视角的「任务管理」屏 —— 对应 pages/home.wxml 的 wx:else 分支。
+
+    结构刻意与 home.wxml 保持一致：管理台置顶（导入任务 / 录音审核 / 审计日志），
+    其后是任务进度（全局完成率 + 三宫格 + 采集员进度 + 任务包）。
+    改了 home.wxml 的管理端结构，这里要同步。
+    管理员看不到采集员那一支（同页的 wx:if="{{isCollector}}" 分支），故这里不铺。
+    """
+    ranks = [
+        # userId, 已通过, 总数, 百分比, 待录, 待审, 退回
+        ('u_demo', 12, 20, 60, 3, 2, 1),
+        ('u_audrey', 8, 20, 40, 5, 1, 0),
+    ]
+    rank_html = '\n'.join(
+        '    <div class="card rank">\n'
+        '      <div class="rank-top"><span class="rank-id">%s</span>'
+        '<span class="rank-rate">%d/%d · %d%%</span></div>\n'
+        '      <div class="bar slim"><div class="bar-fill" style="width:%d%%"></div></div>\n'
+        '      <div class="chips"><span class="chip">待录 %d</span><span class="chip">待审 %d</span>'
+        '<span class="chip%s">退回 %d</span></div>\n'
+        '    </div>' % (uid, ap, tot, pct, pct, pend, upl, ' bad' if rej else '', rej)
+        for uid, ap, tot, pct, pend, upl, rej in ranks
+    )
+    # 下面这段是静态 HTML，不做 % 格式化（里面有 width:68% 这类字面量）
+    return ("""
+    <div class="hero">
+      <div class="hero-blob hero-blob1"></div>
+      <div class="hero-blob hero-blob2"></div>
+      <div class="hero-row">
+        <div class="hero-main">
+          <div class="hero-hi">晚上好，u_admin</div>
+          <div class="hero-sub"><span class="role-tag">管理员</span><span class="hero-hint">导入任务 · 任务进度 · 录音审核</span></div>
+        </div>
+        <div class="hero-avatar">U</div>
+      </div>
+    </div>
+
+    <div class="sec-head">
+      <div class="sec-title"><div class="sec-bar"></div><span>管理台</span></div>
+    </div>
+    <div class="entries">
+      <div class="entry">
+        <div class="entry-ico ico-blue">＋</div>
+        <div class="entry-body">
+          <div class="entry-title">导入任务</div>
+          <div class="entry-desc">上传 Excel / CSV 或粘贴文本，统一下发给采集员</div>
+        </div>
+        <div class="entry-arrow">›</div>
+      </div>
+      <div class="entry">
+        <div class="entry-ico ico-green">✓</div>
+        <div class="entry-body">
+          <div class="entry-title">录音审核</div>
+          <div class="entry-desc">试听录音，通过或退回（7 条待审）</div>
+        </div>
+        <div class="entry-arrow">›</div>
+      </div>
+      <div class="entry">
+        <div class="entry-ico ico-violet">≡</div>
+        <div class="entry-body">
+          <div class="entry-title">审计日志</div>
+          <div class="entry-desc">查看导入 / 审核 / 导出记录，清理过期导出包</div>
+        </div>
+        <div class="entry-arrow">›</div>
+      </div>
+    </div>
+
+    <div class="sec-head">
+      <div class="sec-title"><div class="sec-bar green"></div><span>任务进度</span></div>
+    </div>
+    <div class="card pcard">
+      <div class="pc-head"><span class="pc-title">采集完成率</span><span class="pc-sub">68 / 100</span></div>
+      <div class="pc-body">
+        <div class="pc-num">68<span class="pc-unit">%</span></div>
+        <div class="pc-right">
+          <div class="bar"><div class="bar-fill" style="width:68%"></div></div>
+          <div class="chips">
+            <span class="chip">待录 12</span>
+            <span class="chip">待审 7</span>
+            <span class="chip ok">已通过 68</span>
+            <span class="chip bad">已退回 5</span>
+            <span class="chip">公共池 8</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="stats">
+      <div class="stat"><div class="stat-num amber">7</div><div class="stat-label">待审核</div></div>
+      <div class="stat"><div class="stat-num blue">88</div><div class="stat-label">已采集</div></div>
+      <div class="stat"><div class="stat-num">100</div><div class="stat-label">总任务</div></div>
+    </div>
+
+    <div class="sec-head">
+      <div class="sec-title"><div class="sec-bar"></div><span>采集员进度</span></div>
+      <span class="sec-more">全部 6 人 ›</span>
+    </div>
+__RANKS__
+
+    <div class="sec-head">
+      <div class="sec-title"><div class="sec-bar violet"></div><span>任务包</span></div>
+    </div>
+    <div class="card pkg">
+      <div class="pkg-top"><span class="pkg-name">2024 朗读语料 · 第一批</span><span class="pkg-id">PKG-2405-01</span></div>
+      <div class="chips">
+        <span class="chip">文本 100</span>
+        <span class="chip">任务 100</span>
+        <span class="chip amber">待录 12</span>
+      </div>
+    </div>
+""").replace('__RANKS__', rank_html)
+
+
 PAGES = [
     # (输出文件名, 预览标题, 参与转换的 WXSS, body, 页面下方的体检条 HTML)
-    ('style-preview.html', '学习资源',
+    ('style-preview-admin-home.html', '任务管理（管理员的 tab 首页）',
+     ['app.wxss', 'pages/home/home.wxss', 'custom-tab-bar/index.wxss'],
+     admin_shell('任务管理', admin_home_inner()) + manager_bar_html(),
+     tabbar_strip_html('manager')),
+    ('style-preview.html', '学习资源（采集员的 tab）',
      ['app.wxss', 'pages/resources/resources.wxss', 'custom-tab-bar/index.wxss'],
-     BODY_RESOURCES, tabbar_strip_html()),
+     BODY_RESOURCES, tabbar_strip_html('collector')),
     ('style-preview-audit.html', '审计日志（管理端分包）',
      ['app.wxss', 'subpackages/admin/audit/audit.wxss'],
      admin_shell('审计日志', audit_inner()), ''),
