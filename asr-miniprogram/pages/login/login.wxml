@@ -6,8 +6,14 @@
   <!-- 品牌 -->
   <view class="brand">
     <view class="logo">
-      <view class="logo-mic"></view>
-      <view class="logo-stand"></view>
+      <view class="logo-yoke"></view>
+      <view class="logo-body">
+        <view class="logo-slit"></view>
+        <view class="logo-slit"></view>
+        <view class="logo-slit"></view>
+      </view>
+      <view class="logo-neck"></view>
+      <view class="logo-base"></view>
     </view>
     <view class="title">ASR 语音采集</view>
   </view>

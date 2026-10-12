@@ -8,11 +8,12 @@ calc(50% - 4px) 的小数宽度，所以预览里是两列、真机上却因为 
 custom-tab-bar 转成 CSS（rpx -> px 按 375 设计宽度折算 0.5，page -> :root，
 view -> div，text -> span），再用与 WXML 结构一致的标记渲染，最大化还原真机效果。
 
-生成 4 个页面（见 PAGES）：
+生成 5 个页面（见 PAGES）：
   style-preview.html         学习资源（采集端，含 tabBar 高亮块落点校验条）
   style-preview-audit.html   审计日志（管理端分包）
   style-preview-review.html  审核台（管理端分包）
   style-preview-import.html  导入任务（管理端分包）
+  style-preview-login.html   登录（含品牌标尺寸体检条 1× / 1.5× / 2×）
 
 用法: python tools/gen_style_preview.py
 """
@@ -167,7 +168,10 @@ def tabbar_strip_html():
             '    <div class="bar-demo-label">blobIdx = %d → %s（静止态・no-anim）</div>\n'
             '  </div>' % (i * 100, '\n'.join(items), i, txt)
         )
-    return '\n'.join(out)
+    return ('<div class="strip">\n'
+            '  <div class="strip-title">底部导航高亮块落点校验（transform 版，逐个下标）</div>\n'
+            + '\n'.join(out) + '\n'
+            '</div>')
 
 
 BODY_RESOURCES = """
@@ -391,6 +395,71 @@ def import_inner():
     ])
 
 
+def logo_html():
+    """品牌标的 DOM 结构，需与 pages/login/login.wxml 的 .logo 块保持一致。
+
+    纯 CSS 绘制：U 形支架 / 话筒本体（内含 3 条网罩横缝）/ 支杆 / 底座，
+    另有 .logo::before 做顶部柔光。改结构时两处要同步。
+    """
+    slits = ''.join('<div class="logo-slit"></div>' for _ in range(3))
+    return ('<div class="logo">'
+            '<div class="logo-yoke"></div>'
+            '<div class="logo-body">' + slits + '</div>'
+            '<div class="logo-neck"></div>'
+            '<div class="logo-base"></div>'
+            '</div>')
+
+
+def login_inner():
+    feats = [
+        ('blue', '◉', '录音采集', '照文本逐句朗读并提交'),
+        ('green', '✓', '审核与导出', '试听判定通过 / 退回，导出数据集'),
+        ('violet', '＋', '任务导入', 'Excel 两列（序号 + 汉语文本）统一下发'),
+    ]
+    feat_html = '\n'.join(
+        '      <div class="feat"><div class="feat-ico %s">%s</div>'
+        '<div class="feat-body"><div class="feat-t">%s</div>'
+        '<div class="feat-d">%s</div></div></div>' % f for f in feats
+    )
+    chips = ['首页', '学习资源', '语言采集', '我的']
+    chip_html = ''.join(
+        '<div class="tab-chip%s">%s</div>' % (' active' if c == '语言采集' else '', c)
+        for c in chips
+    )
+    return ''.join([
+        '    <div class="bg-blob bg1"></div>\n',
+        '    <div class="bg-blob bg2"></div>\n',
+        '    <div class="bg-blob bg3"></div>\n',
+        '    <div class="brand">\n      ' + logo_html() + '\n'
+        '      <div class="title">ASR 语音采集</div>\n    </div>\n',
+        '    <div class="tabs">' + chip_html + '</div>\n',
+        '    <div class="card">\n' + feat_html + '\n    </div>\n',
+        '    <button class="login-btn">微信登录（采集员）</button>\n',
+        '    <button class="admin-btn">管理员登录（演示）</button>',
+    ])
+
+
+def logo_strip_html():
+    """品牌标尺寸体检：1× 是登录页实际尺寸，1.5×/2× 用来看细节是否站得住。
+
+    用 transform: scale() 整体缩放，而不是改 width/height —— 标内部的几何是
+    按 136rpx 手工对位的固定值，改外框会让各部件错位。
+    """
+    out = []
+    for scale, label in ((1, '1× · 136rpx（登录页实际尺寸）'),
+                         (1.5, '1.5×'), (2, '2× · 放大看细节')):
+        out.append(
+            '  <div class="zoom-item">\n'
+            '    <div class="zoom-stage"><div class="zoom-box" style="transform: scale(%s)">%s</div></div>\n'
+            '    <div class="zoom-label">%s</div>\n'
+            '  </div>' % (scale, logo_html(), label)
+        )
+    return ('<div class="strip">\n'
+            '  <div class="strip-title">品牌标尺寸体检（纯 CSS 绘制 · 零位图）</div>\n'
+            '  <div class="zoom-row">\n' + '\n'.join(out) + '\n  </div>\n'
+            '</div>')
+
+
 DOC = """<!DOCTYPE html>
 <html lang="zh-CN">
 <head>
@@ -438,14 +507,17 @@ input { border: none; outline: none; background: transparent; }
 .strip-title { font: 600 14px/1.6 -apple-system, "PingFang SC", sans-serif; color: #12171f; margin: 0 0 12px; }
 .bar-demo { position: relative; width: 375px; height: 73px; margin-bottom: 26px; border-radius: 10px; overflow: hidden; }
 .bar-demo-label { position: absolute; top: -22px; left: 0; font: 12px/1.6 -apple-system, "PingFang SC", sans-serif; color: #5a6470; }
+/* ===== 品牌标尺寸体检条 ===== */
+.zoom-row { display: flex; align-items: flex-start; }
+.zoom-item { display: flex; flex-direction: column; margin-right: 54px; }
+.zoom-stage { width: 152px; height: 162px; display: flex; align-items: center; justify-content: center; }
+.zoom-box { width: 68px; height: 68px; }
+.zoom-label { margin-top: 6px; text-align: center; font: 12px/1.6 -apple-system, "PingFang SC", sans-serif; color: #5a6470; }
 </style>
 </head>
 <body>
 %(body)s
-<div class="strip">
-  <div class="strip-title">底部导航高亮块落点校验（transform 版，逐个下标）</div>
 %(strip)s
-</div>
 <script>
 // 支持 file:///...style-preview.html#bottom 直接滚到底，用来检查底部留白
 if (location.hash.indexOf('bottom') >= 0) {
@@ -459,31 +531,34 @@ if (location.hash.indexOf('bottom') >= 0) {
 
 
 PAGES = [
-    # (输出文件名, 预览标题, 参与转换的 WXSS, body, 是否带 tabBar 落点校验条)
+    # (输出文件名, 预览标题, 参与转换的 WXSS, body, 页面下方的体检条 HTML)
     ('style-preview.html', '学习资源',
      ['app.wxss', 'pages/resources/resources.wxss', 'custom-tab-bar/index.wxss'],
-     BODY_RESOURCES, True),
+     BODY_RESOURCES, tabbar_strip_html()),
     ('style-preview-audit.html', '审计日志（管理端分包）',
      ['app.wxss', 'subpackages/admin/audit/audit.wxss'],
-     admin_shell('审计日志', audit_inner()), False),
+     admin_shell('审计日志', audit_inner()), ''),
     ('style-preview-review.html', '审核台（管理端分包）',
      ['app.wxss', 'subpackages/admin/review/review.wxss'],
-     admin_shell('审核台', review_inner()), False),
+     admin_shell('审核台', review_inner()), ''),
     ('style-preview-import.html', '导入任务（管理端分包）',
      ['app.wxss', 'subpackages/admin/import/import.wxss'],
-     admin_shell('导入任务', import_inner()), False),
+     admin_shell('导入任务', import_inner()), ''),
+    ('style-preview-login.html', '登录',
+     ['app.wxss', 'pages/login/login.wxss'],
+     admin_shell('登录', login_inner()), logo_strip_html()),
 ]
 
 
 def main():
     outdir = os.path.join(ROOT, '.workbuddy', 'preview')
-    for name, title, css_files, body, with_strip in PAGES:
+    for name, title, css_files, body, strip in PAGES:
         css = read_css(*css_files)
         html = DOC % {
             'css': css,
             'body': body,
             'title': title,
-            'strip': tabbar_strip_html() if with_strip else '',
+            'strip': strip,
         }
         path = os.path.join(outdir, name)
         with io.open(path, 'w', encoding='utf-8') as f:
